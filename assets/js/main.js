@@ -22,11 +22,30 @@
       var footPhone = $('.footer-list [data-phone-link]');
       if (footPhone) footPhone.textContent = DATA.phoneDisplay;
     }
+    if (DATA.ownerName) {
+      $$('[data-owner-name]').forEach(function (el) { el.textContent = DATA.ownerName; });
+    }
+    if (DATA.ownerTitle) {
+      $$('[data-owner-title]').forEach(function (el) { el.textContent = DATA.ownerTitle; });
+    }
     if (DATA.email) {
       $$('[data-email-link]').forEach(function (el) {
         el.textContent = DATA.email;
         el.setAttribute("href", "mailto:" + DATA.email);
       });
+      // Links that keep their own wording (icons, "Email us", etc.)
+      $$('[data-email-href]').forEach(function (el) {
+        el.setAttribute("href", "mailto:" + DATA.email);
+      });
+    }
+    if (DATA.facebook) {
+      $$('[data-facebook]').forEach(function (el) { el.setAttribute("href", DATA.facebook); });
+    }
+    if (DATA.instagram) {
+      $$('[data-instagram]').forEach(function (el) { el.setAttribute("href", DATA.instagram); });
+    }
+    if (DATA.instagramName) {
+      $$('[data-instagram-name]').forEach(function (el) { el.textContent = DATA.instagramName; });
     }
   }
 
@@ -115,6 +134,181 @@
       heroNext.textContent = todayStop
         ? todayStop.place + " · " + todayStop.time
         : "See this week's stops";
+    }
+  }
+
+  /* ── Booking calendar ────────────────────────────────────────── */
+  var MONTHS = ["January","February","March","April","May","June",
+                "July","August","September","October","November","December"];
+  var DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+  // Local-midnight date from "YYYY-MM-DD". Parsing the string directly
+  // with new Date() would treat it as UTC and shift the day westward.
+  function parseDay(iso) {
+    var p = String(iso).split("-");
+    return new Date(+p[0], +p[1] - 1, +p[2]);
+  }
+  function key(d) {
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  function initCalendar() {
+    var grid = $('[data-cal-grid]');
+    if (!grid) return;
+
+    var title = $('[data-cal-title]');
+    var prev  = $('[data-cal-prev]');
+    var next  = $('[data-cal-next]');
+    var list  = $('[data-cal-upcoming]');
+
+    // Group bookings by date so a day can hold more than one.
+    var byDate = {};
+    (DATA.bookings || []).forEach(function (b) {
+      if (!b || !b.date) return;
+      (byDate[b.date] = byDate[b.date] || []).push(b);
+    });
+
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var view = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    function dayLabel(d, events) {
+      var parts = [DAYS[d.getDay()] + ", " + MONTHS[d.getMonth()] + " " + d.getDate()];
+      if (!events.length) parts.push("open for booking");
+      events.forEach(function (e) {
+        parts.push(e.title + (e.time ? ", " + e.time : "") + (e.place ? ", " + e.place : ""));
+      });
+      return parts.join(" — ");
+    }
+
+    function render() {
+      title.textContent = MONTHS[view.getMonth()] + " " + view.getFullYear();
+
+      var first = new Date(view.getFullYear(), view.getMonth(), 1);
+      var start = new Date(first);
+      start.setDate(1 - first.getDay());          // back up to Sunday
+      var frag = document.createDocumentFragment();
+
+      for (var i = 0; i < 42; i++) {
+        var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+        var inMonth = d.getMonth() === view.getMonth();
+        var events = byDate[key(d)] || [];
+        var past = d < today;
+
+        var cell = document.createElement("div");
+        cell.className = "cal-day";
+        if (!inMonth) cell.classList.add("is-outside");
+        if (past) cell.classList.add("is-past");
+        if (d.getTime() === today.getTime()) cell.classList.add("is-today");
+        if (events.length) {
+          cell.classList.add(events.some(function (e) { return e.type === "private"; })
+            ? "is-private" : "is-public");
+        }
+
+        var num = document.createElement("span");
+        num.className = "cal-num";
+        num.textContent = String(d.getDate());
+        cell.appendChild(num);
+
+        if (inMonth && events.length) {
+          var wrap = document.createElement("span");
+          wrap.className = "cal-events";
+          events.forEach(function (e) {
+            var chip = document.createElement("span");
+            chip.className = "cal-chip cal-chip-" + (e.type === "private" ? "private" : "public");
+            chip.textContent = e.title;
+            wrap.appendChild(chip);
+          });
+          cell.appendChild(wrap);
+        }
+
+        if (inMonth) {
+          cell.tabIndex = 0;
+          cell.setAttribute("role", "button");
+          cell.setAttribute("aria-label", dayLabel(d, events));
+        } else {
+          cell.setAttribute("aria-hidden", "true");
+        }
+
+        frag.appendChild(cell);
+      }
+
+      grid.innerHTML = "";
+      grid.appendChild(frag);
+
+      // Don't let people page back before the current month.
+      prev.disabled = view.getFullYear() === today.getFullYear() &&
+                      view.getMonth() === today.getMonth();
+    }
+
+    function renderUpcoming() {
+      if (!list) return;
+      var upcoming = (DATA.bookings || [])
+        .filter(function (b) { return b && b.date && parseDay(b.date) >= today; })
+        .sort(function (a, b) { return a.date < b.date ? -1 : 1; })
+        .slice(0, 5);
+
+      list.innerHTML = "";
+      if (!upcoming.length) {
+        var li = document.createElement("li");
+        li.className = "cal-none";
+        li.textContent = "Nothing on the books yet — the calendar is wide open.";
+        list.appendChild(li);
+        return;
+      }
+
+      upcoming.forEach(function (e) {
+        var d = parseDay(e.date);
+        var li = document.createElement("li");
+        li.className = "cal-up " + (e.type === "private" ? "is-private" : "is-public");
+
+        var when = document.createElement("span");
+        when.className = "cal-up-date";
+        when.innerHTML = "<strong>" + d.getDate() + "</strong>" +
+                         "<small>" + MONTHS[d.getMonth()].slice(0, 3) + "</small>";
+
+        var body = document.createElement("span");
+        body.className = "cal-up-body";
+        var t = document.createElement("strong");
+        t.textContent = e.title;
+        body.appendChild(t);
+
+        var meta = [e.time, e.place].filter(Boolean).join(" · ");
+        if (meta) {
+          var m = document.createElement("small");
+          m.textContent = meta;
+          body.appendChild(m);
+        }
+
+        li.appendChild(when);
+        li.appendChild(body);
+        list.appendChild(li);
+      });
+    }
+
+    function shift(months) {
+      view = new Date(view.getFullYear(), view.getMonth() + months, 1);
+      render();
+    }
+
+    prev.addEventListener("click", function () { shift(-1); });
+    next.addEventListener("click", function () { shift(1); });
+
+    render();
+    renderUpcoming();
+
+    // Surface today's stop in the hero.
+    var heroNext = $('[data-hero-next]');
+    if (heroNext) {
+      var mine = byDate[key(today)];
+      if (mine && mine.length) {
+        var e = mine[0];
+        heroNext.textContent = e.type === "private"
+          ? "Out on a private event"
+          : e.title + (e.time ? " · " + e.time : "");
+      }
     }
   }
 
@@ -318,6 +512,7 @@
   applyContact();
   applyOrderLinks();
   renderSchedule();
+  initCalendar();
   initNav();
   initHeader();
   initTabs();

@@ -6,9 +6,9 @@ open `index.html` in a browser and it runs.
 ```
 index.html                 all page content
 assets/css/styles.css      styling (Mardi Gras palette from the logo)
-assets/js/site-data.js     ← edit this: schedule, phone, ordering link
-assets/js/main.js          behavior (nav, tabs, schedule, form)
-assets/img/                logo, favicon, photo placeholders
+assets/js/site-data.js     ← edit this: contact, socials, calendar, route
+assets/js/main.js          behavior (nav, tabs, calendar, form)
+assets/img/                logo, favicon, food photos
 ```
 
 ---
@@ -21,22 +21,43 @@ values — everything is either in `assets/js/site-data.js` or marked in
 
 ### 1. Contact + ordering — `assets/js/site-data.js`
 
-| Field | Currently | Needs |
+| Field | Currently | Status |
 |---|---|---|
-| `phoneDisplay` / `phoneDial` | `(555) 000-0000` | the real number |
-| `email` | `hello@bayoueatz.com` | the real inbox |
-| `orderUrl` | empty | Square / Toast / ChowNow / DoorDash link |
-| `formEndpoint` | empty | form service URL (see below) |
+| `ownerName` / `ownerTitle` | Joe Munson, Owner & Executive Chef | ✅ real |
+| `phoneDisplay` / `phoneDial` | (225) 371-5951 | ✅ real |
+| `email` | bayoueatz@outlook.com | ✅ real |
+| `facebook` / `instagram` | facebook.com/Bayoueatz, @bayoueatzz | ✅ real |
+| `orderUrl` | empty | ⬜ Square / Toast / ChowNow / DoorDash link |
+| `formEndpoint` | empty | ⬜ form service URL (see below) |
 
-These values populate every phone number, email and Order button on the page,
-so you only enter them once.
+These values populate every phone number, email, social link and Order button
+on the page, so you only enter them once.
 
 **If `orderUrl` stays empty**, the Order buttons dial the phone instead and a
 note explains that online ordering isn't set up. Nothing breaks.
 
-### 2. Weekly schedule — `assets/js/site-data.js`
+### 2. Booking calendar — `assets/js/site-data.js`
 
-The `schedule` array drives the "Find the truck" section. Each entry:
+The `bookings` array drives the calendar and the "Coming up" list. One entry
+per committed date; anything not listed shows as **open for booking**.
+
+```js
+{
+  date: "2026-08-15",        // always YYYY-MM-DD, zero-padded
+  type: "public",            // "public" = come eat · "private" = booked
+  title: "Saturday Market",
+  time: "12pm – 8pm",
+  place: "Riverfront lot"    // omit on private bookings if the host wants privacy
+}
+```
+
+Today's date is highlighted, past days are dimmed, and customers can't page
+back before the current month. **The entries in the file right now are
+examples — replace them with real dates.**
+
+### 3. Weekly route — `assets/js/site-data.js`
+
+The `schedule` array drives the "A typical week" section. Each entry:
 
 ```js
 {
@@ -49,33 +70,22 @@ The `schedule` array drives the "Find the truck" section. Each entry:
 }
 ```
 
-Whichever entry matches today's `day` gets highlighted with a **Today** badge
-and shows up in the hero. Update it whenever the route changes.
+Whichever entry matches today's `day` gets highlighted with a **Today** badge.
+Update it whenever the route changes.
 
-### 3. The logo
+### 4. Logo and photos — done
 
-`assets/img/logo.svg` is a stand-in drawn to match the real logo's colors and
-layout. Replace it with the official artwork:
+`assets/img/logo.webp` (and the smaller `logo-small.webp`) is the real logo,
+background removed so it sits on the dark page. The seven gallery and story
+photos are the real ones, resized and compressed for the web.
 
-- Save the real logo as `assets/img/logo.svg` (or `.png`) with a transparent
-  background, around 800px wide.
-- If you use a PNG, update the two `src="assets/img/logo.svg"` references in
-  `index.html` (header and footer).
+### 5. Details still to confirm in `index.html`
 
-### 4. Photos
-
-`assets/img/gallery-1.svg` … `gallery-6.svg` and `story.svg` are branded
-placeholders. Replace them with real photos (JPG is fine — just update the
-`src` and the `alt` text in `index.html`). Keep them under ~400 KB each so the
-page stays fast on phones.
-
-### 5. Details to confirm in `index.html`
-
-- Footer hours (currently generic Tue–Sat times)
-- Service area line in the footer
-- Catering package names and minimums
-- The story section copy — it's written from the menu and branding, not from
-  the owner's actual words
+- **Footer hours** — currently generic Tue–Sat times
+- **Catering package** names, minimums and pricing
+- **The story section copy** — written from the menu and branding, not from
+  Chef Joe's own words
+- **Service area** — the site doesn't name a city yet
 - `<title>`, meta description and the canonical URL once the domain is chosen
 
 ---
@@ -115,8 +125,12 @@ your registrar's guide specifies.
 - Fonts load from Google Fonts (Alfa Slab One, Cinzel, Karla). If the site is
   ever run fully offline, the page falls back to Georgia and system sans —
   layout is unaffected.
-- Everything works without JavaScript except the schedule list, the menu
-  category tabs (all sections stay visible instead), and the catering form.
+- Every Facebook, Instagram and email link on the page — header icons, inline
+  mentions, the owner card, the footer — comes from `site-data.js`. Change a
+  URL there and it updates everywhere.
+- Everything works without JavaScript except the schedule list, the calendar
+  (it shows a "call us" message instead), the menu category tabs (all
+  sections stay visible), and the catering form.
 - Tested down to 320px wide; no horizontal scrolling at any width.
 - Respects `prefers-reduced-motion` — animations are disabled for users who
   ask for that.

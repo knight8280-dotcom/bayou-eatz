@@ -152,7 +152,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .9em; c
 
 .header-inner { display: flex; align-items: center; gap: 1rem; min-height: 74px; }
 .brand { display: flex; align-items: center; margin-right: auto; }
-.brand-logo { height: 52px; width: auto; }
+.brand-logo { height: 58px; width: auto; }
 
 .site-nav { display: flex; align-items: center; gap: 1.6rem; }
 .site-nav ul { display: flex; align-items: center; gap: 1.6rem; }
@@ -187,6 +187,24 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .9em; c
 .nav-toggle[aria-expanded="true"] .nav-toggle-bars::before { transform: translateY(7px) rotate(45deg); }
 .nav-toggle[aria-expanded="true"] .nav-toggle-bars::after  { transform: translateY(-7px) rotate(-45deg); }
 
+/* ── Social icon links ───────────────────────────────────────────── */
+.social-icons { display: flex; align-items: center; gap: .5rem; }
+.social-icon {
+  width: 38px; height: 38px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  color: var(--cream);
+  background: rgb(255 255 255 / .06);
+  border: 1px solid var(--rule);
+  transition: background-color .2s, border-color .2s, color .2s, transform .15s;
+}
+.social-icon svg { width: 19px; height: 19px; fill: currentColor; }
+.social-icon:hover {
+  color: #2a1405; background: var(--gold);
+  border-color: var(--gold); transform: translateY(-2px);
+}
+.site-footer .social-icons { margin-top: 1.1rem; }
+
 /* ── Hero ────────────────────────────────────────────────────────── */
 .hero {
   position: relative;
@@ -205,24 +223,23 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .9em; c
 .hero-inner { position: relative; text-align: center; padding-bottom: clamp(2.5rem, 6vw, 4.5rem); }
 .hero .eyebrow { justify-content: center; }
 
-.hero h1 {
+.hero-logo { margin: 0 0 1.4rem; }
+.hero-logo img {
+  width: min(100%, 460px);
+  height: auto;
+  margin-inline: auto;
+  filter: drop-shadow(0 14px 34px rgb(0 0 0 / .55));
+}
+.hero-tagline {
   font-family: var(--display);
-  font-size: clamp(2.9rem, 10vw, 6.4rem);
-  font-weight: 400;
-  letter-spacing: .01em;
+  font-size: clamp(1.5rem, 1.1rem + 2.1vw, 2.6rem);
+  line-height: 1.15;
   text-transform: uppercase;
+  letter-spacing: .01em;
+  text-wrap: balance;
   margin: 0 0 1.1rem;
   color: var(--cream);
   text-shadow: 0 3px 0 var(--purple-dk), 0 6px 22px rgb(0 0 0 / .6);
-}
-.hero h1 em {
-  font-style: normal;
-  /* text-shadow must be cleared: with a transparent fill it would paint
-     a solid offset copy of the glyphs over the gradient. */
-  text-shadow: none;
-  background: linear-gradient(180deg, var(--gold-lt) 10%, var(--gold) 55%, var(--gold-dk));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(0 3px 0 rgb(58 16 85 / .9)) drop-shadow(0 8px 20px rgb(0 0 0 / .5));
 }
 .lede {
   max-width: 60ch; margin: 0 auto 2rem;
@@ -329,6 +346,153 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .9em; c
 }
 .find-note p { margin: 0; color: var(--text-dim); max-width: 60ch; }
 .find-note strong { color: var(--cream); }
+
+/* ── Booking calendar ────────────────────────────────────────────── */
+.section-calendar { background: linear-gradient(180deg, #170a22, var(--ink)); }
+
+.cal-layout {
+  display: grid; gap: clamp(1.25rem, 3vw, 2rem);
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, .95fr);
+  align-items: start;
+}
+
+.cal-card {
+  background: rgb(27 11 38 / .75);
+  border: 1px solid var(--gold-dk); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: clamp(1rem, 2.5vw, 1.6rem);
+}
+.cal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; margin-bottom: 1.1rem;
+}
+.cal-head h3 {
+  margin: 0; text-align: center; flex: 1 1 auto;
+  font: 900 clamp(1.1rem, 1rem + .6vw, 1.5rem)/1 var(--heading);
+  text-transform: uppercase; letter-spacing: .08em; color: var(--gold);
+}
+.cal-nav {
+  width: 44px; height: 44px; flex: none;
+  display: grid; place-items: center;
+  font-size: 1.5rem; line-height: 1;
+  color: var(--cream); background: rgb(255 255 255 / .06);
+  border: 1px solid var(--rule); border-radius: 10px; cursor: pointer;
+  transition: background-color .2s, border-color .2s, color .2s;
+}
+.cal-nav:hover:not(:disabled) { background: var(--purple); border-color: var(--gold); color: var(--gold-lt); }
+.cal-nav:disabled { opacity: .3; cursor: not-allowed; }
+
+.cal-weekdays, .cal-grid {
+  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px;
+}
+.cal-weekdays {
+  margin-bottom: 6px;
+  font: 700 .68rem/1 var(--body); letter-spacing: .12em;
+  text-transform: uppercase; color: var(--text-dim); text-align: center;
+}
+.cal-fallback { grid-column: 1 / -1; margin: 0; color: var(--text-dim); }
+
+.cal-day {
+  position: relative;
+  min-height: 84px;
+  padding: .4rem .4rem .5rem;
+  border: 1px solid var(--rule); border-radius: 8px;
+  background: rgb(255 255 255 / .03);
+  display: flex; flex-direction: column; gap: .25rem;
+  transition: border-color .18s, background-color .18s, transform .18s;
+}
+.cal-day.is-outside { opacity: .25; pointer-events: none; }
+.cal-day.is-past { opacity: .45; }
+.cal-day[role="button"]:hover { transform: translateY(-2px); border-color: var(--gold-dk); }
+.cal-num {
+  font: 700 .82rem/1 var(--body); color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.cal-day.is-today { border-color: var(--gold); box-shadow: inset 0 0 0 1px rgb(232 181 60 / .35); }
+.cal-day.is-today .cal-num { color: var(--gold); }
+.cal-day.is-public  { background: rgb(232 181 60 / .1);  border-color: rgb(232 181 60 / .45); }
+.cal-day.is-private { background: rgb(124 58 173 / .28); border-color: var(--purple-lt); }
+
+.cal-events { display: flex; flex-direction: column; gap: 3px; }
+.cal-chip {
+  font: 700 .62rem/1.25 var(--body);
+  letter-spacing: .03em;
+  padding: .22rem .35rem; border-radius: 4px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cal-chip-public  { background: var(--gold); color: #2a1405; }
+.cal-chip-private { background: var(--purple-lt); color: #fff; }
+
+.cal-legend {
+  display: flex; flex-wrap: wrap; gap: .6rem 1.4rem;
+  margin-top: 1.1rem; padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  font-size: .82rem; color: var(--text-dim);
+}
+.cal-legend li { display: flex; align-items: center; gap: .45rem; }
+.dot { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.dot-public  { background: var(--gold); }
+.dot-private { background: var(--purple-lt); }
+.dot-open    { background: rgb(255 255 255 / .12); border: 1px solid var(--rule); }
+
+.cal-side {
+  background: rgb(27 11 38 / .55);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  padding: clamp(1.1rem, 2.5vw, 1.5rem);
+}
+.cal-side h3 {
+  font: 700 .78rem/1 var(--body); letter-spacing: .18em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 1.1rem;
+}
+.cal-upcoming { display: grid; gap: .7rem; }
+.cal-up {
+  display: flex; gap: .85rem; align-items: flex-start;
+  padding: .75rem .85rem;
+  border: 1px solid var(--rule); border-left: 3px solid var(--purple-lt);
+  border-radius: 10px; background: rgb(255 255 255 / .03);
+}
+.cal-up.is-public { border-left-color: var(--gold); }
+.cal-up-date {
+  flex: none; width: 40px; text-align: center; line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.cal-up-date strong { display: block; font: 900 1.25rem/1 var(--heading); color: var(--gold); }
+.cal-up-date small { display: block; font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); }
+.cal-up-body { display: grid; gap: .15rem; min-width: 0; }
+.cal-up-body strong { font-size: .95rem; color: var(--cream); }
+.cal-up-body small { font-size: .8rem; color: var(--text-dim); }
+.cal-none { color: var(--text-dim); font-size: .92rem; }
+
+.cal-cta { margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px solid var(--rule); }
+.cal-cta p { font-size: .9rem; color: var(--text-dim); }
+.cal-cta-alt { margin: .8rem 0 0; text-align: center; font-size: .85rem; }
+.cal-cta-alt a { word-break: break-word; }
+
+/* ── Owner card ──────────────────────────────────────────────────── */
+.owner-card {
+  display: flex; gap: 1.1rem; align-items: flex-start;
+  margin: 2rem 0 0;
+  padding: 1.35rem 1.5rem;
+  border: 1px solid var(--gold-dk); border-radius: var(--radius);
+  background: linear-gradient(135deg, rgb(91 33 131 / .38), rgb(27 11 38 / .6));
+}
+.owner-mark {
+  flex: none; width: 46px; height: 46px; display: grid; place-items: center;
+  border-radius: 50%; background: rgb(232 181 60 / .14);
+  border: 1px solid var(--gold-dk); color: var(--gold); font-size: 1.4rem;
+}
+.owner-body { min-width: 0; }
+.owner-name {
+  margin: 0; font: 900 1.3rem/1.1 var(--heading);
+  text-transform: uppercase; letter-spacing: .04em; color: var(--cream);
+}
+.owner-role {
+  margin: .15rem 0 .7rem; font: 700 .72rem/1 var(--body);
+  letter-spacing: .16em; text-transform: uppercase; color: var(--gold);
+}
+.owner-note { margin: 0 0 .8rem; font-size: .92rem; color: var(--text-dim); }
+.owner-contact { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; }
+.owner-contact a { font-weight: 700; }
 
 /* ── Menu ────────────────────────────────────────────────────────── */
 .section-menu {
@@ -460,13 +624,13 @@ html:not(.js) .menu-panel + .menu-panel {
           mask: var(--fdl-src) center / contain no-repeat;
 }
 .story-points strong { color: var(--cream); }
+.story-follow { color: var(--text-dim); }
 
 .story-figure { margin: 0; }
 .story-figure img {
   width: 100%; border-radius: var(--radius);
   border: 1px solid var(--gold-dk); box-shadow: var(--shadow);
 }
-.story-figure figcaption { margin-top: .75rem; font-size: .8rem; color: var(--text-dim); }
 
 /* ── Catering ────────────────────────────────────────────────────── */
 .section-catering {
@@ -540,25 +704,25 @@ html:not(.js) .menu-panel + .menu-panel {
 .form-status.is-error { color: #f0937f; }
 
 /* ── Gallery ─────────────────────────────────────────────────────── */
-/* 3x3 mosaic: two tall tiles and one wide tile fill the grid exactly,
-   so there are no empty cells. */
+/* The photos are all portrait, so every tile gets the same 3:4 frame
+   rather than cropping them into landscape slots. */
 .gallery-grid {
   display: grid; gap: 1rem;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 220px);
 }
-.gallery-item:nth-child(1) { grid-area: 1 / 1 / 3 / 2; }
-.gallery-item:nth-child(2) { grid-area: 1 / 2 / 2 / 3; }
-.gallery-item:nth-child(3) { grid-area: 1 / 3 / 2 / 4; }
-.gallery-item:nth-child(4) { grid-area: 2 / 2 / 3 / 3; }
-.gallery-item:nth-child(5) { grid-area: 2 / 3 / 4 / 4; }
-.gallery-item:nth-child(6) { grid-area: 3 / 1 / 4 / 3; }
 .gallery-item {
-  margin: 0; overflow: hidden; border-radius: 12px;
+  position: relative; margin: 0; overflow: hidden; border-radius: 12px;
   border: 1px solid var(--rule); background: var(--ink-2);
+  aspect-ratio: 3 / 4;
 }
 .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
 .gallery-item:hover img { transform: scale(1.06); }
+.gallery-item figcaption {
+  position: absolute; inset: auto 0 0; padding: 2.5rem .9rem .8rem;
+  font: 700 .82rem/1.2 var(--heading);
+  letter-spacing: .08em; text-transform: uppercase; color: var(--cream);
+  background: linear-gradient(180deg, transparent, rgb(11 4 16 / .88));
+}
 
 .social-row {
   margin-top: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
@@ -588,7 +752,7 @@ html:not(.js) .menu-panel + .menu-panel {
   grid-template-columns: 1.4fr repeat(3, 1fr);
   padding-bottom: 2.5rem;
 }
-.footer-logo { height: 62px; width: auto; margin-bottom: 1rem; }
+.footer-logo { height: 96px; width: auto; margin-bottom: 1rem; }
 .footer-brand p { color: var(--text-dim); font-size: .92rem; max-width: 34ch; }
 .site-footer h3 {
   font: 700 .78rem/1 var(--body); letter-spacing: .18em;
@@ -610,8 +774,12 @@ html:not(.js) .menu-panel + .menu-panel {
 .reveal.is-visible { opacity: 1; transform: none; }
 
 /* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 1080px) and (min-width: 801px) {
+  .site-nav > .social-icons { display: none; }
+}
+
 @media (max-width: 960px) {
-  .story-grid, .catering-grid { grid-template-columns: 1fr; }
+  .story-grid, .catering-grid, .cal-layout { grid-template-columns: 1fr; }
   .story-figure { order: -1; max-width: 520px; }
   .catering-form-card { position: static; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
@@ -634,13 +802,16 @@ html:not(.js) .menu-panel + .menu-panel {
   .site-nav li { border-bottom: 1px solid var(--rule); }
   .site-nav a { display: block; padding: 1rem 0; font-size: .95rem; }
   .site-nav a::after { display: none; }
-  .nav-cta { margin-top: 1.2rem; }
+  .site-nav .social-icons { margin-top: 1.2rem; justify-content: center; }
+  .nav-cta { margin-top: 1rem; }
 }
 
 @media (max-width: 720px) {
-  .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: none; grid-auto-rows: 160px; }
-  .gallery-item:nth-child(n) { grid-area: auto; }
-  .gallery-item:nth-child(1) { grid-column: span 2; }
+  .gallery-grid { grid-template-columns: 1fr 1fr; }
+  /* Phone calendar: dots instead of labels, details live in "Coming up" */
+  .cal-day { min-height: 46px; padding: .3rem .2rem; align-items: center; }
+  .cal-chip { width: 8px; height: 8px; padding: 0; border-radius: 50%; text-indent: -999em; }
+  .cal-events { flex-direction: row; justify-content: center; gap: 3px; }
   .schedule-row { grid-template-columns: 1fr; gap: .5rem; }
   .schedule-time { justify-self: start; }
   .field-row { grid-template-columns: 1fr; }
@@ -650,11 +821,10 @@ html:not(.js) .menu-panel + .menu-panel {
 
 @media (max-width: 520px) {
   .footer-grid { grid-template-columns: 1fr; }
-  .gallery-grid { grid-template-columns: 1fr; grid-auto-rows: 200px; }
-  .gallery-item:nth-child(1) { grid-column: auto; }
+  .gallery-grid { grid-template-columns: 1fr; }
   .btn { width: 100%; }
   .hero-actions, .order-actions, .social-row { flex-direction: column; align-items: stretch; }
-  .brand-logo { height: 42px; }
+  .brand-logo { height: 46px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
