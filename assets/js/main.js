@@ -227,7 +227,15 @@
         if (inMonth) {
           cell.tabIndex = 0;
           cell.setAttribute("role", "button");
-          cell.setAttribute("aria-label", dayLabel(d, events));
+          cell.setAttribute("aria-label", dayLabel(d, events) + " — request this date");
+          cell.dataset.date = key(d);
+          cell.addEventListener("click", function () { requestDate(this.dataset.date); });
+          cell.addEventListener("keydown", function (ev) {
+            if (ev.key === "Enter" || ev.key === " ") {
+              ev.preventDefault();
+              requestDate(this.dataset.date);
+            }
+          });
         } else {
           cell.setAttribute("aria-hidden", "true");
         }
@@ -286,6 +294,25 @@
         li.appendChild(body);
         list.appendChild(li);
       });
+    }
+
+    // Clicking a day carries it into the booking form, so a calendar
+    // date and a typed request land in the same inbox the same way.
+    function requestDate(iso) {
+      var input = $('#q-date');
+      var section = $('#catering');
+      if (input) input.value = iso;
+      if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
+      var name = $('#q-name');
+      if (name) setTimeout(function () { name.focus({ preventScroll: true }); }, 500);
+
+      var status = $('[data-form-status]');
+      if (status) {
+        var d = parseDay(iso);
+        status.textContent = "Asking about " + MONTHS[d.getMonth()] + " " +
+                             d.getDate() + ", " + d.getFullYear() + ".";
+        status.className = "form-status";
+      }
     }
 
     function shift(months) {
@@ -427,6 +454,18 @@
       status.className = "form-status" + (kind ? " is-" + kind : "");
     }
 
+    // An explicit endpoint always wins. Otherwise the request is emailed
+    // to the address the site already advertises, so there is never a
+    // second inbox to remember.
+    function resolveEndpoint() {
+      var explicit = (DATA.formEndpoint || "").trim();
+      if (explicit) return explicit;
+      if ((DATA.formService || "") === "formsubmit" && DATA.email) {
+        return "https://formsubmit.co/ajax/" + encodeURIComponent(DATA.email);
+      }
+      return "";
+    }
+
     function mailtoFallback(data) {
       var to = DATA.email || "hello@bayoueatz.com";
       var body = [
@@ -460,8 +499,16 @@
       new FormData(form).forEach(function (v, k) { data[k] = v; });
       delete data.company;
 
-      var endpoint = (DATA.formEndpoint || "").trim();
+      var endpoint = resolveEndpoint();
       if (!endpoint) { mailtoFallback(data); return; }
+
+      // Give Chef Joe a subject line he can scan in his inbox, and make
+      // "reply" go straight back to the customer.
+      data._subject = "Booking request — " + data.name +
+                      (data.date ? " — " + data.date : "");
+      data._template = "table";
+      data._captcha = "false";
+      data._replyto = data.email;
 
       var submitBtn = $('button[type="submit"]', form);
       submitBtn.disabled = true;
@@ -475,10 +522,12 @@
         .then(function (res) {
           if (!res.ok) throw new Error("Request failed");
           form.reset();
-          say("Thank you — we got it. We'll be in touch within one business day.", "ok");
+          say("Sent — your request is in Chef Joe's inbox. You'll hear back within one business day.", "ok");
         })
         .catch(function () {
-          say("That didn't go through. Please call us or email " + (DATA.email || "us") + " directly.", "error");
+          // Don't lose the customer's typing: hand it to their mail app.
+          say("Couldn't send that automatically — opening your email app instead.", "error");
+          mailtoFallback(data);
         })
         .then(function () { submitBtn.disabled = false; });
     });

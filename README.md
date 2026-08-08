@@ -90,15 +90,50 @@ photos are the real ones, resized and compressed for the web.
 
 ---
 
-## Catering form
+## Where booking requests go
 
-The form validates in the browser and then does one of two things:
+Every quote and booking request is emailed to the **same address the site
+advertises** — `email` in `site-data.js`, currently `bayoueatz@outlook.com`.
+There is no separate dashboard or inbox to check, and changing that one field
+redirects the requests along with the rest of the site.
 
-- **`formEndpoint` set** → POSTs the submission as JSON to that URL.
-  Works with [Formspree](https://formspree.io), [Basin](https://usebasin.com),
-  Netlify Forms, or any endpoint that accepts a JSON POST.
-- **`formEndpoint` empty** → opens the customer's email app with every field
-  pre-filled and addressed to `email`. Still functional, just one extra tap.
+Requests reach that inbox two ways, and both end up in the same place:
+
+1. The **Request a date** form in the booking section.
+2. **Tapping any day on the calendar**, which drops that date into the form
+   and scrolls the customer straight to it.
+
+### One-time setup — Chef Joe must click a confirmation link
+
+The form posts through [formsubmit.co](https://formsubmit.co), which needs no
+account. The catch is a single activation step:
+
+1. Put the site online (a local file won't do — the service needs a real page).
+2. Send one test request through the form.
+3. **formsubmit.co emails `bayoueatz@outlook.com` a confirmation link.** Open
+   that email and click the link.
+4. That's it. Every request from then on lands in the inbox automatically.
+
+Until step 3 is done, requests are accepted by the service but not forwarded —
+so send that first test yourself and confirm it arrives.
+
+Each email arrives as a formatted table with the customer's name, email, phone,
+event date, guest count, service type and notes. The subject line reads
+`Booking request — <name> — <date>`, and hitting **reply** goes straight back
+to the customer.
+
+### If it ever fails
+
+If the service is unreachable, the form doesn't lose the customer's typing — it
+opens their own email app with every field pre-filled and addressed to the same
+inbox. They just hit send.
+
+### Using a different service
+
+Paste any endpoint that accepts a JSON POST into `formEndpoint` and it takes
+over — [Formspree](https://formspree.io), [Basin](https://usebasin.com),
+Netlify Forms, or your own. Set `formService: ""` to skip the service entirely
+and always use the email-app route.
 
 A hidden honeypot field catches most spam bots.
 

@@ -27,9 +27,21 @@ window.BAYOU = {
      Leave as "" and the Order buttons fall back to calling.         */
   orderUrl: "",
 
-  /* ── Catering form ────────────────────────────────────────────────
-     Paste a form endpoint (Formspree, Basin, Netlify Forms, etc.).
-     Leave as "" and the form opens a pre-filled email instead.      */
+  /* ── Where booking requests go ────────────────────────────────────
+     Every quote and booking request from the site is emailed to the
+     `email` address above — no separate inbox to check.
+
+     "formsubmit" routes it through formsubmit.co, which needs no
+     account: the FIRST request sent from the live site triggers a
+     one-time confirmation email to that address. Click the link in it
+     once and every request after that arrives automatically.
+
+     Set formService to "" to turn the service off; the form then opens
+     the customer's own email app with everything filled in instead.
+
+     formEndpoint overrides all of this — paste a Formspree / Basin /
+     Netlify Forms URL here if you'd rather use one of those.          */
+  formService:  "formsubmit",
   formEndpoint: "",
 
   /* ── Weekly route ─────────────────────────────────────────────────
