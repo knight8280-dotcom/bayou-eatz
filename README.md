@@ -4,11 +4,15 @@ A static website for the Bayou Eatz food truck. No build step, no dependencies �
 open `index.html` in a browser and it runs.
 
 ```
-index.html                 all page content
+index.html                 the site — sections, menu and FAQ text
+privacy.html               privacy policy (the forms collect data)
+404.html                   "page not found"
 assets/css/styles.css      styling (Mardi Gras palette from the logo)
-assets/js/site-data.js     ← edit this: contact, socials, calendar, route
-assets/js/main.js          behavior (nav, tabs, calendar, form)
-assets/img/                logo, favicon, food photos
+assets/js/site-data.js     ← edit this: contact, socials, calendar, hours
+assets/js/main.js          behavior (nav, tabs, calendar, forms, schema)
+assets/img/                logo, icons, share card, food photos
+robots.txt sitemap.xml     search engines
+site.webmanifest           "add to home screen" on phones
 ```
 
 ---
@@ -28,7 +32,10 @@ values — everything is either in `assets/js/site-data.js` or marked in
 | `email` | bayoueatz@outlook.com | ✅ real |
 | `facebook` / `instagram` | facebook.com/Bayoueatz, @bayoueatzz | ✅ real |
 | `orderUrl` | empty | ⬜ Square / Toast / ChowNow / DoorDash link |
-| `formEndpoint` | empty | ⬜ form service URL (see below) |
+| `formEndpoint` | empty | ⬜ only if you'd rather not use the default (see below) |
+| `siteUrl` | https://bayoueatz.com | ⬜ set to the real domain before launch |
+| `serviceArea` / `city` / `region` | Baton Rouge & surrounding parishes | ⚠️ **guessed from the 225 area code — confirm** |
+| `hours` | Tue–Thu 11–7, Fri–Sat 11–10 | ⚠️ **placeholder — confirm** |
 
 These values populate every phone number, email, social link and Order button
 on the page, so you only enter them once.
@@ -81,12 +88,28 @@ photos are the real ones, resized and compressed for the web.
 
 ### 5. Details still to confirm in `index.html`
 
-- **Footer hours** — currently generic Tue–Sat times
+Search the file for `EDIT:` to find each one.
+
 - **Catering package** names, minimums and pricing
+- **"What we need on site"** — the space, setup time and travel answers are
+  reasonable defaults, not measured facts. Check every figure.
+- **FAQ answers** — the questions marked in the file as needing confirmation
+  are booking notice, travel radius and venue requirements
 - **The story section copy** — written from the menu and branding, not from
   Chef Joe's own words
-- **Service area** — the site doesn't name a city yet
 - `<title>`, meta description and the canonical URL once the domain is chosen
+
+### 6. Reviews — off until they're real
+
+The reviews section is hidden and the `reviews` array in `site-data.js` is
+empty on purpose: nothing is invented. Paste in real quotes from Facebook or
+Google and the section turns itself on.
+
+### 7. Turn the domain on in three files
+
+When the real address is known, update it in `site-data.js` (`siteUrl`),
+`robots.txt`, and `sitemap.xml`. The `<link rel="canonical">` and share-card
+tags in `index.html` need it too.
 
 ---
 
@@ -155,6 +178,30 @@ your registrar's guide specifies.
 
 ---
 
+## What's on the page for search engines
+
+- **Structured data** — a `FoodEstablishment` record (name, phone, email,
+  cuisine, hours, service area, socials, owner), an `FAQPage` built from the
+  FAQ section, and a `FoodEvent` for each upcoming **public** stop so Google
+  can list them. Private bookings are deliberately left out.
+  The business block is written into `index.html` so crawlers that don't run
+  scripts still read it; `main.js` refreshes it from `site-data.js` so the two
+  can't drift apart.
+- **Share card** — `assets/img/og-card.jpg` (1200×630) is what appears when
+  someone posts the link on Facebook or in a text message.
+- `robots.txt` and `sitemap.xml`, both pointing at the domain you set.
+- The FAQ is plain HTML in `index.html`, so it's readable with scripts off.
+
+Two things worth doing outside this repo, and they matter more than anything
+on the page for getting found locally:
+
+1. **Claim the Google Business Profile.** For a food truck that's the single
+   biggest source of "food truck near me" traffic.
+2. **Keep the Facebook page current** — the site points people there for
+   day-of updates, so it needs to actually have them.
+
+---
+
 ## Notes
 
 - Fonts load from Google Fonts (Alfa Slab One, Cinzel, Karla). If the site is
@@ -166,6 +213,8 @@ your registrar's guide specifies.
 - Everything works without JavaScript except the schedule list, the calendar
   (it shows a "call us" message instead), the menu category tabs (all
   sections stay visible), and the catering form.
-- Tested down to 320px wide; no horizontal scrolling at any width.
+- The email-list signup and the booking form both post to the same address.
+- Tested at 320, 390, 768, 1024, 1280 and 1600px — no horizontal scrolling at
+  any of them.
 - Respects `prefers-reduced-motion` — animations are disabled for users who
   ask for that.

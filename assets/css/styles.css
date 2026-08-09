@@ -703,6 +703,153 @@ html:not(.js) .menu-panel + .menu-panel {
 .form-status.is-ok { color: var(--green-lt); }
 .form-status.is-error { color: #f0937f; }
 
+/* ── Booking steps ───────────────────────────────────────────────── */
+/* Numbered because booking really is a sequence — send, quote, confirm. */
+.booking-steps {
+  display: grid; gap: 1rem; margin: 2rem 0 0;
+  counter-reset: step;
+}
+.booking-steps li {
+  position: relative; padding-left: 3.4rem;
+  counter-increment: step;
+}
+.booking-steps li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: -.1rem;
+  width: 2.4rem; height: 2.4rem; display: grid; place-items: center;
+  border-radius: 50%;
+  font: 900 1rem/1 var(--heading);
+  color: var(--gold); background: rgb(232 181 60 / .12);
+  border: 1px solid var(--gold-dk);
+}
+.booking-steps h3 {
+  font: 700 1rem/1.2 var(--heading); text-transform: uppercase;
+  letter-spacing: .06em; color: var(--cream); margin-bottom: .25rem;
+}
+.booking-steps p { margin: 0; color: var(--text-dim); font-size: .95rem; }
+
+/* ── Event logistics ─────────────────────────────────────────────── */
+.logistics {
+  margin-top: 2rem; padding: 1.4rem 1.5rem;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: rgb(255 255 255 / .03);
+}
+.logistics h3 {
+  font: 700 .78rem/1 var(--body); letter-spacing: .18em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 1.1rem;
+}
+.logistics-list {
+  display: grid; gap: .8rem 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  margin: 0;
+}
+.logistics-list > div { display: grid; gap: .15rem; }
+.logistics-list dt {
+  font: 700 .7rem/1 var(--body); letter-spacing: .14em;
+  text-transform: uppercase; color: var(--cream);
+}
+.logistics-list dd { margin: 0; color: var(--text-dim); font-size: .92rem; }
+.logistics-note { margin: 1.2rem 0 0; font-size: .88rem; color: var(--text-dim); }
+
+/* ── Reviews ─────────────────────────────────────────────────────── */
+.section-reviews { background: linear-gradient(180deg, var(--ink), #170a22); }
+.section-reviews[hidden] { display: none; }
+.review-grid {
+  display: grid; gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+.review {
+  padding: 1.5rem 1.6rem;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: rgb(36 16 49 / .55);
+  position: relative;
+}
+.review::before {
+  content: "\201C";
+  position: absolute; top: .3rem; left: 1rem;
+  font: 400 4rem/1 var(--display); color: var(--gold); opacity: .3;
+}
+.review blockquote {
+  margin: 0 0 .9rem; position: relative;
+  font-size: 1.02rem; color: var(--cream);
+}
+.review cite {
+  font: 700 .74rem/1 var(--body); letter-spacing: .12em;
+  text-transform: uppercase; color: var(--gold); font-style: normal;
+}
+.review-cta { margin: 1.75rem 0 0; color: var(--text-dim); }
+
+/* ── FAQ ─────────────────────────────────────────────────────────── */
+.section-faq { background: linear-gradient(180deg, #150822, var(--ink)); }
+.faq-list { display: grid; gap: .7rem; max-width: 60rem; }
+.faq-item {
+  border: 1px solid var(--rule); border-radius: 12px;
+  background: rgb(36 16 49 / .5);
+  transition: border-color .2s;
+}
+.faq-item[open] { border-color: var(--gold-dk); }
+.faq-item summary {
+  display: flex; align-items: center; gap: .9rem;
+  padding: 1.1rem 1.3rem; cursor: pointer; list-style: none;
+  font: 700 1.02rem/1.35 var(--heading);
+  letter-spacing: .02em; color: var(--cream);
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after {
+  content: ""; margin-left: auto; flex: none;
+  width: 11px; height: 11px;
+  border-right: 2px solid var(--gold); border-bottom: 2px solid var(--gold);
+  transform: rotate(45deg) translateY(-3px);
+  transition: transform .22s ease;
+}
+.faq-item[open] summary::after { transform: rotate(-135deg) translateY(-3px); }
+.faq-item summary:hover { color: var(--gold); }
+.faq-item p {
+  margin: 0; padding: 0 1.3rem 1.3rem;
+  color: var(--text-dim); max-width: 62ch;
+}
+
+/* ── Email alerts signup ─────────────────────────────────────────── */
+.signup {
+  display: grid; gap: 1.5rem 2.5rem;
+  grid-template-columns: 1.1fr .9fr; align-items: center;
+  padding: clamp(1.5rem, 4vw, 2.4rem);
+  margin-bottom: clamp(2rem, 5vw, 3rem);
+  border: 1px solid var(--gold-dk); border-radius: var(--radius);
+  background: linear-gradient(135deg, rgb(91 33 131 / .4), rgb(27 11 38 / .7));
+}
+.signup h2 {
+  font: 900 clamp(1.4rem, 1.2rem + 1vw, 2rem)/1.1 var(--heading);
+  text-transform: uppercase; letter-spacing: .03em;
+  color: var(--cream); margin-bottom: .5rem;
+}
+.signup-copy p { margin: 0; color: var(--text-dim); }
+.signup-form { display: flex; flex-wrap: wrap; gap: .7rem; }
+.signup-form input[type="email"] {
+  flex: 1 1 15rem; min-width: 0;
+  font: 400 1rem/1.4 var(--body); color: var(--cream);
+  background: rgb(255 255 255 / .06);
+  border: 1px solid var(--rule); border-radius: 999px;
+  padding: .95rem 1.2rem;
+  transition: border-color .18s, background-color .18s;
+}
+.signup-form input[type="email"]:focus {
+  border-color: var(--gold); background: rgb(255 255 255 / .09); outline: none;
+}
+.signup-form input::placeholder { color: #8c7d95; }
+.signup-form .form-status { flex: 1 0 100%; margin: 0; }
+
+.footer-area { margin: .8rem 0 0; font-size: .88rem; color: var(--text-dim); }
+
+/* ── Calendar stop actions ───────────────────────────────────────── */
+.cal-up-actions { display: flex; flex-wrap: wrap; gap: .3rem .9rem; margin-top: .35rem; }
+.cal-up-actions a {
+  font: 700 .72rem/1 var(--body); letter-spacing: .08em;
+  text-transform: uppercase; color: var(--gold);
+  border-bottom: 1px solid transparent; padding-bottom: 2px;
+}
+.cal-up-actions a:hover { border-bottom-color: var(--gold); }
+
 /* ── Gallery ─────────────────────────────────────────────────────── */
 /* The photos are all portrait, so every tile gets the same 3:4 frame
    rather than cropping them into landscape slots. */
@@ -774,12 +921,12 @@ html:not(.js) .menu-panel + .menu-panel {
 .reveal.is-visible { opacity: 1; transform: none; }
 
 /* ── Responsive ──────────────────────────────────────────────────── */
-@media (max-width: 1080px) and (min-width: 801px) {
+@media (max-width: 1160px) and (min-width: 801px) {
   .site-nav > .social-icons { display: none; }
 }
 
 @media (max-width: 960px) {
-  .story-grid, .catering-grid, .cal-layout { grid-template-columns: 1fr; }
+  .story-grid, .catering-grid, .cal-layout, .signup { grid-template-columns: 1fr; }
   .story-figure { order: -1; max-width: 520px; }
   .catering-form-card { position: static; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
@@ -810,7 +957,9 @@ html:not(.js) .menu-panel + .menu-panel {
   .gallery-grid { grid-template-columns: 1fr 1fr; }
   /* Phone calendar: dots instead of labels, details live in "Coming up" */
   .cal-day { min-height: 46px; padding: .3rem .2rem; align-items: center; }
-  .cal-chip { width: 8px; height: 8px; padding: 0; border-radius: 50%; text-indent: -999em; }
+  /* Collapse the label rather than pushing it off-screen with a negative
+     indent — that leaves a ~10,000px scroll box the viewport has to cover. */
+  .cal-chip { width: 8px; height: 8px; padding: 0; border-radius: 50%; font-size: 0; line-height: 0; }
   .cal-events { flex-direction: row; justify-content: center; gap: 3px; }
   .schedule-row { grid-template-columns: 1fr; gap: .5rem; }
   .schedule-time { justify-self: start; }
@@ -834,6 +983,24 @@ html:not(.js) .menu-panel + .menu-panel {
 }
 
 @media print {
-  .site-header, .hero-strip, .nav-toggle, .section-order, .catering-form-card, .gallery-grid { display: none; }
+  .site-header, .hero-strip, .nav-toggle, .section-order, .catering-form-card, .gallery-grid, .signup { display: none; }
+  .faq-item p { display: block; }
   body { background: #fff; color: #000; }
 }
+
+/* ── Legal pages / 404 ───────────────────────────────────────────── */
+.legal-body { max-width: 68ch; }
+.legal-body h3 {
+  font: 700 1.1rem/1.2 var(--heading); text-transform: uppercase;
+  letter-spacing: .06em; color: var(--gold);
+  margin: 2.2rem 0 .6rem;
+}
+.legal-body p { color: var(--text-dim); }
+.legal-list { display: grid; gap: .6rem; margin: 0 0 1em; padding-left: 1.2rem; }
+.legal-list li { color: var(--text-dim); list-style: disc; }
+.legal-list strong { color: var(--cream); }
+.legal-updated { margin-top: 2.5rem; font-size: .85rem; }
+.legal + .site-footer { border-top: 1px solid var(--rule); }
+
+.notfound { min-height: 82vh; display: grid; align-content: center; }
+.notfound-logo { display: block; }

@@ -137,6 +137,18 @@
     }
   }
 
+  // An explicit endpoint always wins. Otherwise requests are emailed to
+  // the address the site already advertises, so there is never a second
+  // inbox to remember.
+  function resolveEndpoint() {
+    var explicit = (DATA.formEndpoint || "").trim();
+    if (explicit) return explicit;
+    if ((DATA.formService || "") === "formsubmit" && DATA.email) {
+      return "https://formsubmit.co/ajax/" + encodeURIComponent(DATA.email);
+    }
+    return "";
+  }
+
   /* ── Booking calendar ────────────────────────────────────────── */
   var MONTHS = ["January","February","March","April","May","June",
                 "July","August","September","October","November","December"];
@@ -152,6 +164,54 @@
     return d.getFullYear() + "-" +
       String(d.getMonth() + 1).padStart(2, "0") + "-" +
       String(d.getDate()).padStart(2, "0");
+  }
+
+  // A one-event .ics the customer can save to their own calendar.
+  // Built client-side so it works with no server and no third party.
+  function icsFor(ev) {
+    // Commas, semicolons and backslashes are delimiters in .ics text
+    // values — an address like "Main St, Baton Rouge" splits the field
+    // in two unless they're escaped.
+    function esc(s) {
+      return String(s == null ? "" : s)
+        .replace(/\\/g, "\\\\")
+        .replace(/;/g, "\\;")
+        .replace(/,/g, "\\,")
+        .replace(/\r?\n/g, "\\n");
+    }
+    var d = ev.date.replace(/-/g, "");
+    var next = parseDay(ev.date);
+    next.setDate(next.getDate() + 1);
+    var lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Bayou Eatz//Stops//EN",
+      "CALSCALE:GREGORIAN",
+      "BEGIN:VEVENT",
+      "UID:" + d + "-bayoueatz@" + (DATA.siteUrl || "bayoueatz").replace(/^https?:\/\//, ""),
+      "DTSTAMP:" + d + "T000000Z",
+      "DTSTART;VALUE=DATE:" + d,
+      "DTEND;VALUE=DATE:" + key(next).replace(/-/g, ""),
+      "SUMMARY:" + esc("Bayou Eatz — " + ev.title),
+      "DESCRIPTION:" + esc([ev.time, ev.place].filter(Boolean).join(" | ")),
+      ev.place ? "LOCATION:" + esc(ev.place) : "",
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].filter(Boolean);
+    // .ics requires CRLF line endings
+    return "data:text/calendar;charset=utf-8," + encodeURIComponent(lines.join("\r\n"));
+  }
+
+  function mapsUrl(place) {
+    // Only add the town when the stop doesn't already name it, so a full
+    // street address doesn't come out as "…, Baton Rouge, Baton Rouge".
+    var q = place;
+    var lower = place.toLowerCase();
+    if (DATA.city && lower.indexOf(DATA.city.toLowerCase()) === -1) {
+      q += ", " + DATA.city;
+      if (DATA.region) q += ", " + DATA.region;
+    }
+    return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
   }
 
   function initCalendar() {
@@ -290,6 +350,31 @@
           body.appendChild(m);
         }
 
+        // Public stops get directions and a save-to-calendar link.
+        // Private bookings get neither — nobody needs directions to
+        // somebody else's wedding.
+        if (e.type !== "private") {
+          var actions = document.createElement("span");
+          actions.className = "cal-up-actions";
+
+          if (e.place) {
+            var dir = document.createElement("a");
+            dir.href = mapsUrl(e.place);
+            dir.target = "_blank";
+            dir.rel = "noopener";
+            dir.textContent = "Directions";
+            actions.appendChild(dir);
+          }
+
+          var ics = document.createElement("a");
+          ics.href = icsFor(e);
+          ics.setAttribute("download", "bayou-eatz-" + e.date + ".ics");
+          ics.textContent = "Add to calendar";
+          actions.appendChild(ics);
+
+          body.appendChild(actions);
+        }
+
         li.appendChild(when);
         li.appendChild(body);
         list.appendChild(li);
@@ -335,6 +420,183 @@
         heroNext.textContent = e.type === "private"
           ? "Out on a private event"
           : e.title + (e.time ? " · " + e.time : "");
+      }
+    }
+  }
+
+
+  /* ── Hours + service area ────────────────────────────────────── */
+  function applyHours() {
+    var list = $('[data-hours]');
+    if (list && (DATA.hours || []).length) {
+      list.innerHTML = "";
+      DATA.hours.forEach(function (h) {
+        var li = document.createElement("li");
+        li.textContent = h.days + " · " + h.label;
+        list.appendChild(li);
+      });
+    }
+    if (DATA.serviceArea) {
+      $$('[data-service-area]').forEach(function (el) { el.textContent = DATA.serviceArea; });
+    }
+  }
+
+  /* ── Reviews ─────────────────────────────────────────────────── */
+  function renderReviews() {
+    var host = $('[data-reviews]');
+    var section = $('[data-reviews-section]');
+    if (!host || !section) return;
+
+    var reviews = DATA.reviews || [];
+    if (!reviews.length) return;          // stays hidden — never invent quotes
+
+    reviews.forEach(function (r) {
+      var li = document.createElement("li");
+      li.className = "review";
+      var q = document.createElement("blockquote");
+      q.textContent = r.quote;
+      var cite = document.createElement("cite");
+      cite.textContent = r.name + (r.event ? " · " + r.event : "");
+      li.appendChild(q);
+      li.appendChild(cite);
+      host.appendChild(li);
+    });
+    section.hidden = false;
+  }
+
+  /* ── Email alerts signup ─────────────────────────────────────── */
+  function initSignup() {
+    var form = $('[data-signup-form]');
+    if (!form) return;
+    var status = $('[data-signup-status]');
+    var input = $('#s-email', form);
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if ($('#s-company', form).value) return;         // honeypot
+
+      var value = input.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        status.textContent = "That email doesn't look right — mind checking it?";
+        status.className = "form-status is-error";
+        input.focus();
+        return;
+      }
+
+      var endpoint = resolveEndpoint();
+      status.textContent = "Adding you…";
+      status.className = "form-status";
+
+      if (!endpoint) {
+        window.location.href = "mailto:" + (DATA.email || "") +
+          "?subject=" + encodeURIComponent("Add me to the Bayou Eatz list") +
+          "&body=" + encodeURIComponent("Please add " + value + " to your list.");
+        status.textContent = "Opening your email app — just hit send.";
+        status.className = "form-status is-ok";
+        return;
+      }
+
+      fetch(endpoint, {
+        method: "POST",
+        headers: { "Accept": "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: value,
+          _subject: "New email-list signup — " + value,
+          _template: "table",
+          _captcha: "false"
+        })
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error("failed");
+          form.reset();
+          status.textContent = "You're on the list. See you at the window.";
+          status.className = "form-status is-ok";
+        })
+        .catch(function () {
+          status.textContent = "That didn't go through — email " + (DATA.email || "us") + " and we'll add you.";
+          status.className = "form-status is-error";
+        });
+    });
+  }
+
+  /* ── Structured data ─────────────────────────────────────────── */
+  // The business block is written statically in index.html so crawlers
+  // that don't run scripts still see it; this refreshes it from
+  // site-data.js so editing one file can't leave the other stale.
+  function applySchema() {
+    var base = (DATA.siteUrl || "").replace(/\/$/, "");
+
+    var biz = $('[data-schema-business]');
+    if (biz) {
+      try {
+        var o = JSON.parse(biz.textContent);
+        if (DATA.phoneDial) o.telephone = DATA.phoneDial;
+        if (DATA.email) o.email = DATA.email;
+        if (DATA.serviceArea) o.areaServed = DATA.serviceArea;
+        if (DATA.ownerName) o.founder = { "@type": "Person", name: DATA.ownerName, jobTitle: DATA.ownerTitle || "" };
+        o.sameAs = [DATA.facebook, DATA.instagram].filter(Boolean);
+        if (base) {
+          o["@id"] = base + "/#business";
+          o.url = base + "/";
+          o.logo = base + "/assets/img/logo.webp";
+          o.image = base + "/assets/img/og-card.jpg";
+          o.hasMenu = base + "/#menu";
+        }
+        var spec = (DATA.hours || []).filter(function (h) { return !h.closed && h.opens && h.closes; })
+          .map(function (h) {
+            return {
+              "@type": "OpeningHoursSpecification",
+              dayOfWeek: h.schemaDays || [],
+              opens: h.opens,
+              closes: h.closes
+            };
+          });
+        if (spec.length) o.openingHoursSpecification = spec;
+        biz.textContent = JSON.stringify(o, null, 2);
+      } catch (err) { /* leave the static block exactly as authored */ }
+    }
+
+    // Read the FAQ back out of the page so the markup stays the single
+    // source — edit a question in index.html and this follows.
+    var faqEl = $('[data-schema-faq]');
+    var items = $$('.faq-item');
+    if (faqEl && items.length) {
+      faqEl.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: items.map(function (el) {
+          return {
+            "@type": "Question",
+            name: (el.querySelector("summary") || {}).textContent || "",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: (el.querySelector("p") || {}).textContent || ""
+            }
+          };
+        })
+      }, null, 2);
+    }
+
+    // Only public stops become events — private bookings stay private.
+    var evEl = $('[data-schema-events]');
+    if (evEl) {
+      var today = new Date();
+      today.setHours(0, 0, 0, 0);
+      var events = (DATA.bookings || [])
+        .filter(function (b) { return b.type === "public" && parseDay(b.date) >= today; })
+        .map(function (b) {
+          var e = {
+            "@type": "FoodEvent",
+            name: "Bayou Eatz — " + b.title,
+            startDate: b.date,
+            eventStatus: "https://schema.org/EventScheduled",
+            organizer: { "@type": "Organization", name: "Bayou Eatz", url: base ? base + "/" : undefined }
+          };
+          if (b.place) e.location = { "@type": "Place", name: b.place };
+          return e;
+        });
+      if (events.length) {
+        evEl.textContent = JSON.stringify({ "@context": "https://schema.org", "@graph": events }, null, 2);
       }
     }
   }
@@ -454,18 +716,6 @@
       status.className = "form-status" + (kind ? " is-" + kind : "");
     }
 
-    // An explicit endpoint always wins. Otherwise the request is emailed
-    // to the address the site already advertises, so there is never a
-    // second inbox to remember.
-    function resolveEndpoint() {
-      var explicit = (DATA.formEndpoint || "").trim();
-      if (explicit) return explicit;
-      if ((DATA.formService || "") === "formsubmit" && DATA.email) {
-        return "https://formsubmit.co/ajax/" + encodeURIComponent(DATA.email);
-      }
-      return "";
-    }
-
     function mailtoFallback(data) {
       var to = DATA.email || "hello@bayoueatz.com";
       var body = [
@@ -559,6 +809,7 @@
   }
 
   applyContact();
+  applyHours();
   applyOrderLinks();
   renderSchedule();
   initCalendar();
@@ -566,6 +817,9 @@
   initHeader();
   initTabs();
   initForm();
+  initSignup();
+  renderReviews();
+  applySchema();
   initReveal();
   initYear();
 })();

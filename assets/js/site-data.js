@@ -22,6 +22,29 @@ window.BAYOU = {
   instagram:     "https://www.instagram.com/bayoueatzz/",
   instagramName: "@bayoueatzz",
 
+  /* ── Site identity ────────────────────────────────────────────────
+     siteUrl is the live address once the domain is pointed at the site.
+     It's used for share cards, the sitemap and search-engine data, so
+     set it before going live.
+
+     serviceArea is the plain-English answer to "where do you go?" and
+     appears in the footer and in search results.                      */
+  siteUrl:     "https://bayoueatz.com",
+  serviceArea: "Baton Rouge & surrounding parishes",   /* ← CONFIRM THIS */
+  city:        "Baton Rouge",                          /* ← CONFIRM THIS */
+  region:      "LA",
+
+  /* ── Service hours ────────────────────────────────────────────────
+     Shown in the footer and given to Google. Use 24-hour times in
+     `opens`/`closes` (Google needs that format); `label` is what
+     people read. Set closed: true for days you don't serve.
+     ← CONFIRM THESE                                                  */
+  hours: [
+    { days: "Tue – Thu", label: "11am – 7pm",  opens: "11:00", closes: "19:00", schemaDays: ["Tuesday", "Wednesday", "Thursday"] },
+    { days: "Fri – Sat", label: "11am – 10pm", opens: "11:00", closes: "22:00", schemaDays: ["Friday", "Saturday"] },
+    { days: "Sun – Mon", label: "Private events only", closed: true }
+  ],
+
   /* ── Online ordering ──────────────────────────────────────────────
      Paste your Square / Toast / ChowNow / DoorDash link here.
      Leave as "" and the Order buttons fall back to calling.         */
@@ -72,6 +95,22 @@ window.BAYOU = {
 
      The entries below are EXAMPLES. Replace them with real dates.
      ══════════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════════════
+     REVIEWS
+     ──────────────────────────────────────────────────────────────────
+     EMPTY ON PURPOSE. Nothing is invented here. The reviews section
+     stays hidden until you add real ones, so the site never shows a
+     testimonial a customer didn't write.
+
+     To turn it on, paste real quotes — from Facebook reviews, Google,
+     or ones customers send you:
+
+       { quote: "Best loaded fries in the parish.",
+         name:  "Danielle T.",
+         event: "Facebook review" }
+     ══════════════════════════════════════════════════════════════════ */
+  reviews: [],
+
   bookings: [
     { date: "2026-08-11", type: "public",  title: "Downtown Lunch",   time: "11am – 3pm",  place: "Main St & 3rd Ave" },
     { date: "2026-08-13", type: "public",  title: "Brewery Night",    time: "5pm – 9pm",   place: "Local Brewing Co." },

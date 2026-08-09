@@ -9,16 +9,56 @@
 <meta name="description" content="Bayou Eatz food truck — Bayou Loaded Fries, wings, shrimp & fish baskets, fried ribs and flavored lemonades. See where the truck is parked, check the booking calendar, or book Chef Joe Munson for your event.">
 <link rel="canonical" href="https://bayoueatz.com/">
 <meta name="theme-color" content="#170a22">
+<meta property="og:site_name" content="Bayou Eatz">
 <meta property="og:title" content="Bayou Eatz — Taste the Bayou">
-<meta property="og:description" content="Loaded fries, wings, baskets and lemonades, served hot out of the window.">
+<meta property="og:description" content="Loaded fries, wings, baskets and lemonades, served hot out of the window. See where the truck is parked or book it for your event.">
 <meta property="og:type" content="restaurant">
-<meta property="og:image" content="assets/img/logo.webp">
+<meta property="og:url" content="https://bayoueatz.com/">
+<meta property="og:image" content="https://bayoueatz.com/assets/img/og-card.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Bayou Eatz — Taste the Bayou">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bayou Eatz — Taste the Bayou">
+<meta name="twitter:description" content="Loaded fries, wings, baskets and lemonades, served hot out of the window.">
+<meta name="twitter:image" content="https://bayoueatz.com/assets/img/og-card.jpg">
 
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Cinzel:wght@500;700;900&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/styles.css">
+
+<!-- ══ Search-engine data. main.js keeps this in sync with site-data.js ══ -->
+<script type="application/ld+json" data-schema-business>
+{
+  "@context": "https://schema.org",
+  "@type": "FoodEstablishment",
+  "@id": "https://bayoueatz.com/#business",
+  "name": "Bayou Eatz",
+  "slogan": "Taste the Bayou",
+  "description": "Food truck serving Bayou Loaded Fries, wings, shrimp and fish baskets, fried ribs and flavored lemonades.",
+  "url": "https://bayoueatz.com/",
+  "logo": "https://bayoueatz.com/assets/img/logo.webp",
+  "image": "https://bayoueatz.com/assets/img/og-card.jpg",
+  "telephone": "+12253715951",
+  "email": "bayoueatz@outlook.com",
+  "servesCuisine": ["Cajun", "Creole", "Southern", "Soul Food"],
+  "priceRange": "$$",
+  "paymentAccepted": "Cash, Credit Card, Debit Card",
+  "hasMenu": "https://bayoueatz.com/#menu",
+  "areaServed": "Baton Rouge & surrounding parishes",
+  "founder": { "@type": "Person", "name": "Joe Munson", "jobTitle": "Owner & Executive Chef" },
+  "sameAs": [
+    "https://www.facebook.com/Bayoueatz",
+    "https://www.instagram.com/bayoueatzz/"
+  ]
+}
+</script>
+<script type="application/ld+json" data-schema-faq></script>
+<script type="application/ld+json" data-schema-events></script>
 <script>document.documentElement.className += " js";</script>
 </head>
 <body>
@@ -42,6 +82,7 @@
         <li><a href="#menu">Menu</a></li>
         <li><a href="#catering">Book Us</a></li>
         <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#faq">FAQ</a></li>
       </ul>
       <div class="social-icons">
         <a class="social-icon" href="https://www.facebook.com/Bayoueatz" data-facebook target="_blank" rel="noopener" aria-label="Bayou Eatz on Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12z"/></svg></a>
@@ -316,6 +357,19 @@
     </div>
   </section>
 
+  <!-- ════════════ REVIEWS ════════════ -->
+  <!-- Renders only when reviews exist in site-data.js — no invented quotes. -->
+  <section class="section section-reviews" id="reviews" data-reviews-section hidden>
+    <div class="wrap">
+      <header class="section-head">
+        <p class="eyebrow">What folks say</p>
+        <h2>Word of mouth</h2>
+      </header>
+      <ul class="review-grid" data-reviews></ul>
+      <p class="review-cta">Ate with us? Leave a review on <a href="https://www.facebook.com/Bayoueatz" data-facebook target="_blank" rel="noopener">Facebook</a> — it helps more than you'd think.</p>
+    </div>
+  </section>
+
   <!-- ════════════ CATERING ════════════ -->
   <section class="section section-catering" id="catering">
     <div class="wrap catering-grid">
@@ -340,6 +394,21 @@
           </div>
         </div>
 
+        <ol class="booking-steps">
+          <li>
+            <h3>Send your date</h3>
+            <p>Use the form, or tap a day on the calendar and it fills itself in.</p>
+          </li>
+          <li>
+            <h3>Get a written quote</h3>
+            <p>Chef Joe replies within one business day with pricing, a menu and what he needs on site.</p>
+          </li>
+          <li>
+            <h3>Lock it in</h3>
+            <p>Confirm the quote and your date goes on the calendar. We show up early and set up.</p>
+          </li>
+        </ol>
+
         <!-- ══ EDIT: confirm package names, minimums and pricing ══ -->
         <ul class="catering-packages">
           <li>
@@ -358,7 +427,19 @@
             <p>Custom menu, extended service, staffing and setup handled end to end.</p>
           </li>
         </ul>
-        <p class="catering-fine">Travel fees may apply outside our normal service area. Weekends book fast — check the calendar above and give us two weeks' notice where you can.</p>
+        <!-- ══ EDIT: confirm every figure in this block ══ -->
+        <div class="logistics">
+          <h3>What we need on site</h3>
+          <dl class="logistics-list">
+            <div><dt>Space</dt><dd>About 30 ft × 12 ft, level, with clear overhead room</dd></div>
+            <div><dt>Power</dt><dd>None required — the truck runs self-contained</dd></div>
+            <div><dt>Setup</dt><dd>We arrive about an hour before service</dd></div>
+            <div><dt>Payment</dt><dd>Cash and all major cards</dd></div>
+            <div><dt>Travel</dt><dd>Fees apply outside our normal service area</dd></div>
+            <div><dt>Notice</dt><dd>Two weeks is ideal; weekends fill first</dd></div>
+          </dl>
+          <p class="logistics-note">Site a little different? Say so when you book — we've worked around tighter spots than you'd think.</p>
+        </div>
       </div>
 
       <div class="catering-form-card">
@@ -458,6 +539,57 @@
     </div>
   </section>
 
+  <!-- ════════════ FAQ ════════════ -->
+  <section class="section section-faq" id="faq">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="eyebrow">Before you ask</p>
+        <h2>Questions we get</h2>
+        <p class="section-sub">Anything not covered here — call or text Chef Joe at <a href="tel:+12253715951" data-phone>(225) 371-5951</a>.</p>
+      </header>
+      <!-- ══ EDIT: the FAQ lives here, in plain HTML, so search engines
+           and visitors without JavaScript both get it. ══ -->
+      <div class="faq-list" data-faq>
+        <details class="faq-item">
+          <summary>Where is the truck today?</summary>
+          <p>Check the booking calendar on this page — public stops are marked in gold. We also post day-of updates and sellouts on Facebook, since spots can change with the weather.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Do you take cards?</summary>
+          <p>Yes. Cash and all major cards are accepted at the window.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can I book the truck for a private event?</summary>
+          <p>That&#x27;s a big part of what we do — birthdays, weddings, company lunches, church functions, graduations and block parties. Send a request through the form on this page, or call or text Chef Joe directly.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How far in advance should I book?</summary>
+          <p>Two weeks is comfortable, and weekends fill up first. If your date is sooner than that, call — we can sometimes make it work.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How far will you travel?</summary>
+          <p>We serve the greater Baton Rouge area as standard, and we&#x27;ll travel further for the right event. Travel fees depend on distance, so call or email for a quote.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What do you need at the venue?</summary>
+          <p>A flat, level spot roughly 30 feet long by 12 feet wide with clear overhead space, and room for guests to line up safely away from traffic. We run self-contained, so power isn&#x27;t usually required — tell us about your site when you book and we&#x27;ll confirm.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Is there a minimum or a deposit?</summary>
+          <p>Both depend on the size of the event, the date and how far we&#x27;re travelling. Send your details through the form and you&#x27;ll get a written quote with everything spelled out.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can you handle allergies or dietary needs?</summary>
+          <p>Tell us when you order and we&#x27;ll do what we can. Be aware that everything is fried in shared oil, so we can&#x27;t promise a kitchen free of any particular allergen.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Do you sell out?</summary>
+          <p>It happens, especially late in a service. Everything is cooked to order in small batches — when a item&#x27;s gone for the day, it&#x27;s gone. Following us on Facebook is the best way to catch the warning.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
   <!-- ════════════ ORDER CTA ════════════ -->
   <section class="section section-order" id="order">
     <div class="beads beads-top" aria-hidden="true"></div>
@@ -478,6 +610,20 @@
 </main>
 
 <footer class="site-footer">
+  <div class="wrap signup">
+    <div class="signup-copy">
+      <h2>Know when we're near you</h2>
+      <p>Drop your email and we'll send the week's stops. No spam, and you can leave any time.</p>
+    </div>
+    <form class="signup-form" data-signup-form novalidate>
+      <label class="sr-only" for="s-email">Your email</label>
+      <input id="s-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      <div class="hp" aria-hidden="true"><label for="s-company">Company</label><input id="s-company" name="company" type="text" tabindex="-1" autocomplete="off"></div>
+      <button class="btn btn-primary" type="submit">Keep me posted</button>
+      <p class="form-status" data-signup-status role="status" aria-live="polite"></p>
+    </form>
+  </div>
+
   <div class="wrap footer-grid">
     <div class="footer-brand">
       <a href="#top" aria-label="Back to top"><img class="footer-logo" src="assets/img/logo-small.webp" alt="Bayou Eatz" width="360" height="291" loading="lazy"></a>
@@ -498,12 +644,12 @@
     </div>
     <div>
       <h3>Typical hours</h3>
-      <!-- ══ EDIT: real service hours ══ -->
-      <ul class="footer-list">
+      <ul class="footer-list" data-hours>
         <li>Tue – Thu · 11am – 7pm</li>
         <li>Fri – Sat · 11am – 10pm</li>
         <li>Sun – Mon · Private events</li>
       </ul>
+      <p class="footer-area" data-service-area>Baton Rouge &amp; surrounding parishes</p>
     </div>
     <div>
       <h3>Follow</h3>
@@ -515,7 +661,7 @@
     </div>
   </div>
   <div class="wrap footer-bottom">
-    <p>&copy; <span data-year>2026</span> Bayou Eatz. All rights reserved.</p>
+    <p>&copy; <span data-year>2026</span> Bayou Eatz. All rights reserved. · <a href="privacy.html">Privacy</a></p>
     <p><a href="#top">Back to top ↑</a></p>
   </div>
 </footer>
