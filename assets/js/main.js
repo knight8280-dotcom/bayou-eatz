@@ -802,6 +802,205 @@
     targets.forEach(function (el) { io.observe(el); });
   }
 
+
+  /* ── Hero parallax ───────────────────────────────────────────────
+     Drifts the backdrop at a fraction of scroll speed. rAF-throttled,
+     and skipped entirely for anyone who asked for less motion.      */
+  function initParallax() {
+    var el = $('[data-parallax]');
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    var ticking = false;
+    function update() {
+      var y = window.scrollY;
+      // Once the hero is off screen there is nothing to move.
+      if (y < window.innerHeight * 1.3) {
+        el.style.transform = "translate3d(0," + (y * 0.22).toFixed(1) + "px,0)";
+      }
+      ticking = false;
+    }
+    window.addEventListener("scroll", function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
+    update();
+  }
+
+  /* ── Live status pill ────────────────────────────────────────────
+     Reads today off the calendar first, then falls back to the weekly
+     route, so the hero always says something true.                  */
+  function initStatus() {
+    var pill = $('[data-status-pill]');
+    var text = $('[data-status-text]');
+    if (!pill || !text) return;
+
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var iso = key(today);
+
+    var todays = (DATA.bookings || []).filter(function (b) { return b.date === iso; });
+    if (todays.length) {
+      var ev = todays[0];
+      if (ev.type === "private") {
+        pill.classList.add("is-booked");
+        text.textContent = "Out on a private event today";
+      } else {
+        pill.classList.add("is-open");
+        text.textContent = "Today · " + ev.title + (ev.time ? " · " + ev.time : "");
+      }
+      return;
+    }
+
+    var stop = (DATA.schedule || []).filter(function (s) { return s.day === today.getDay(); })[0];
+    if (stop && stop.open !== false) {
+      pill.classList.add("is-open");
+      text.textContent = "Today · " + stop.place + (stop.time ? " · " + stop.time : "");
+      return;
+    }
+
+    // Closed is a dead end on its own — say when we're back instead.
+    var next = nextOpening(today);
+    text.textContent = next
+      ? "Closed today · back " + next.label + (next.time ? ", " + next.time : "")
+      : "Closed today — see the calendar";
+  }
+
+  // Walks forward a week looking for the next serving day, checking the
+  // calendar's public stops first and the weekly route second.
+  function nextOpening(from) {
+    for (var i = 1; i <= 7; i++) {
+      var d = new Date(from.getFullYear(), from.getMonth(), from.getDate() + i);
+
+      var booked = (DATA.bookings || []).filter(function (b) {
+        return b.date === key(d) && b.type === "public";
+      })[0];
+      if (booked) {
+        return { label: DAYS[d.getDay()], time: booked.time || "" };
+      }
+
+      var stop = (DATA.schedule || []).filter(function (s) {
+        return s.day === d.getDay() && s.open !== false;
+      })[0];
+      if (stop) return { label: DAYS[d.getDay()], time: stop.time || "" };
+    }
+    return null;
+  }
+
+  /* ── Gallery lightbox ────────────────────────────────────────────
+     Uses <dialog> so focus trapping and Escape come from the platform
+     rather than being reimplemented badly.                          */
+  function initLightbox() {
+    var dialog = $('[data-lightbox-dialog]');
+    var images = $$('img[data-lightbox]');
+    if (!dialog || !images.length || typeof dialog.showModal !== "function") return;
+
+    var img = $('[data-lightbox-img]', dialog);
+    var cap = $('[data-lightbox-caption]', dialog);
+    var index = 0;
+
+    function show(i) {
+      index = (i + images.length) % images.length;
+      var src = images[index];
+      img.src = src.currentSrc || src.src;
+      img.alt = src.alt || "";
+      var figcap = src.closest("figure") && src.closest("figure").querySelector("figcaption");
+      cap.textContent = figcap ? figcap.textContent : (src.alt || "");
+    }
+
+    images.forEach(function (el, i) {
+      el.addEventListener("click", function () { show(i); dialog.showModal(); });
+    });
+
+    $('[data-lightbox-next]', dialog).addEventListener("click", function () { show(index + 1); });
+    $('[data-lightbox-prev]', dialog).addEventListener("click", function () { show(index - 1); });
+    $('[data-lightbox-close]', dialog).addEventListener("click", function () { dialog.close(); });
+
+    dialog.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight") { e.preventDefault(); show(index + 1); }
+      if (e.key === "ArrowLeft")  { e.preventDefault(); show(index - 1); }
+    });
+
+    // Click the backdrop (but not the photo) to dismiss.
+    dialog.addEventListener("click", function (e) {
+      if (e.target === dialog) dialog.close();
+    });
+
+    // Swipe on touch.
+    var x0 = null;
+    dialog.addEventListener("touchstart", function (e) { x0 = e.changedTouches[0].clientX; }, { passive: true });
+    dialog.addEventListener("touchend", function (e) {
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 45) show(index + (dx < 0 ? 1 : -1));
+      x0 = null;
+    }, { passive: true });
+  }
+
+  /* ── Scroll-spy ──────────────────────────────────────────────────
+     Marks the nav link for whichever section owns the viewport.     */
+  function initScrollSpy() {
+    var links = $$('.site-nav ul a[href^="#"]');
+    if (!links.length || !("IntersectionObserver" in window)) return;
+
+    var map = {};
+    var sections = links.map(function (a) {
+      var el = document.querySelector(a.getAttribute("href"));
+      if (el) map[el.id] = a;
+      return el;
+    }).filter(Boolean);
+
+    var visible = {};
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { visible[en.target.id] = en.isIntersecting ? en.intersectionRatio : 0; });
+      var best = null, bestRatio = 0;
+      Object.keys(visible).forEach(function (id) {
+        if (visible[id] > bestRatio) { bestRatio = visible[id]; best = id; }
+      });
+      links.forEach(function (a) { a.classList.remove("is-current"); });
+      if (best && map[best]) map[best].classList.add("is-current");
+    }, { rootMargin: "-45% 0px -45% 0px", threshold: [0, 0.25, 0.5, 1] });
+
+    sections.forEach(function (s) { io.observe(s); });
+  }
+
+  /* ── Mobile action bar ───────────────────────────────────────────
+     Held back over the hero, where the page already shows big CTAs.  */
+  function initActionBar() {
+    var bar = $('[data-action-bar]');
+    if (!bar) return;
+
+    var phoneBtn = $('[data-phone-href]', bar);
+    if (phoneBtn && DATA.phoneDial) phoneBtn.setAttribute("href", "tel:" + DATA.phoneDial);
+
+    var hero = $('.hero');
+    var trigger = hero ? hero.offsetHeight * 0.6 : 400;
+    var ticking = false;
+    function update() {
+      bar.classList.toggle("is-visible", window.scrollY > trigger);
+      ticking = false;
+    }
+    window.addEventListener("scroll", function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
+    update();
+  }
+
+  /* ── Favorites → menu tab ────────────────────────────────────────
+     A showcase card opens the board on the category it belongs to.  */
+  function initMenuJumps() {
+    $$('[data-menu-jump]').forEach(function (el) {
+      el.addEventListener("click", function (e) {
+        e.preventDefault();
+        var tab = document.getElementById("tab-" + el.dataset.menuJump);
+        if (tab) {
+          tab.click();
+          tab.scrollIntoView({ behavior: "smooth", block: "center" });
+          tab.focus({ preventScroll: true });
+        }
+      });
+    });
+  }
+
   /* ── Misc ────────────────────────────────────────────────────── */
   function initYear() {
     var el = $('[data-year]');
@@ -821,5 +1020,11 @@
   renderReviews();
   applySchema();
   initReveal();
+  initParallax();
+  initStatus();
+  initLightbox();
+  initScrollSpy();
+  initActionBar();
+  initMenuJumps();
   initYear();
 })();

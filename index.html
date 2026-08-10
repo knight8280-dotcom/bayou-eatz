@@ -98,17 +98,30 @@
 
   <!-- ════════════ HERO ════════════ -->
   <section class="hero">
-    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="hero-media" aria-hidden="true">
+      <img class="hero-bg" src="assets/img/hero-bg.jpg" alt="" width="1800" height="1200" fetchpriority="high" data-parallax>
+      <div class="hero-scrim"></div>
+      <div class="hero-glow"></div>
+    </div>
+
     <div class="wrap hero-inner">
+      <p class="status-pill" data-status-pill>
+        <span class="status-dot" aria-hidden="true"></span>
+        <span data-status-text>Check the calendar</span>
+      </p>
+
       <h1 class="hero-logo">
         <img src="assets/img/logo.webp" alt="Bayou Eatz — Taste the Bayou" width="900" height="728" fetchpriority="high">
       </h1>
+
       <p class="hero-tagline">Loaded fries, wings &amp; baskets —<br>straight out the window.</p>
       <p class="lede">Everything fried to order. Shrimp and Patton's hot sausage piled on seasoned fries, wings tossed six ways, and lemonade by the 32&nbsp;oz.</p>
+
       <div class="hero-actions">
         <a class="btn btn-primary btn-lg" href="#order" data-order-link>Order Now</a>
         <a class="btn btn-ghost btn-lg" href="#menu">See the Menu</a>
       </div>
+
       <dl class="hero-facts">
         <div><dt>Today</dt><dd data-hero-next>Check the calendar</dd></div>
         <div><dt>Book the truck</dt><dd><a href="#catering">Parties &amp; events</a></dd></div>
@@ -116,6 +129,11 @@
         <div><dt>Call or text</dt><dd><a href="tel:+12253715951" data-phone>(225) 371-5951</a></dd></div>
       </dl>
     </div>
+
+    <a class="hero-scroll" href="#find-us" aria-label="Scroll to the schedule">
+      <span class="hero-scroll-line" aria-hidden="true"></span>
+    </a>
+
     <div class="beads" aria-hidden="true"></div>
     <div class="hero-strip" aria-hidden="true">
       <div class="hero-strip-track">
@@ -191,8 +209,51 @@
       <header class="section-head">
         <p class="eyebrow">The board</p>
         <h2>Menu</h2>
-        <p class="section-sub">Everything fried to order. Prices and items subject to change — specials get posted on <a href="https://www.facebook.com/Bayoueatz" data-facebook target="_blank" rel="noopener">Facebook</a> and <a href="https://www.instagram.com/bayoueatzz/" data-instagram target="_blank" rel="noopener">Instagram</a>.</p>
+        <p class="section-sub">Everything fried to order, nothing sitting under a lamp. Start with what people come back for, then read the whole board. Specials get posted on <a href="https://www.facebook.com/Bayoueatz" data-facebook target="_blank" rel="noopener">Facebook</a> and <a href="https://www.instagram.com/bayoueatzz/" data-instagram target="_blank" rel="noopener">Instagram</a>.</p>
       </header>
+
+      <ul class="favorites">
+        <li class="fav">
+          <a class="fav-media" href="#panel-sides" data-menu-jump="sides">
+            <img src="assets/img/m-loaded-fries.jpg" alt="Bayou Loaded Fries topped with shrimp, hot sausage, bacon and cheese" loading="lazy" width="720" height="720">
+            <span class="fav-badge">Fan favorite</span>
+          </a>
+          <div class="fav-body">
+            <p class="fav-head"><span class="fav-name">Bayou Loaded Fries</span><span class="fav-price">$15</span></p>
+            <p class="fav-desc">Seasoned fries piled with chopped shrimp, Patton's hot sausage, bacon, melted cheese and Bayou Sauce.</p>
+          </div>
+        </li>
+        <li class="fav">
+          <a class="fav-media" href="#panel-baskets" data-menu-jump="baskets">
+            <img src="assets/img/m-fried-ribs.jpg" alt="Fried ribs served over seasoned fries with dipping sauce" loading="lazy" width="720" height="720">
+          </a>
+          <div class="fav-body">
+            <p class="fav-head"><span class="fav-name">Fried Ribs</span><span class="fav-price">$18</span></p>
+            <p class="fav-desc">Cornmeal-crusted and fried to order, served with fries and sauce on the side.</p>
+          </div>
+        </li>
+        <li class="fav">
+          <a class="fav-media" href="#panel-handhelds" data-menu-jump="handhelds">
+            <img src="assets/img/m-burger.jpg" alt="The Classic Burger on toasted Texas toast with Bayou Sauce" loading="lazy" width="720" height="720">
+          </a>
+          <div class="fav-body">
+            <p class="fav-head"><span class="fav-name">Classic Burger</span><span class="fav-price">$15</span></p>
+            <p class="fav-desc">Beef patty topped with grilled shrimp and cheese, dressed, with Bayou Sauce.</p>
+          </div>
+        </li>
+        <li class="fav">
+          <a class="fav-media" href="#panel-wings" data-menu-jump="wings">
+            <img src="assets/img/m-wings.jpg" alt="Wings tossed in sauce with sliced jalapeños" loading="lazy" width="720" height="720">
+            <span class="fav-badge fav-badge-alt">6 flavors</span>
+          </a>
+          <div class="fav-body">
+            <p class="fav-head"><span class="fav-name">Wings</span><span class="fav-price">$14 / $20</span></p>
+            <p class="fav-desc">Five or ten piece with fries. Lemon pepper, BBQ, mango habanero, buffalo, garlic parm or hot honey.</p>
+          </div>
+        </li>
+      </ul>
+
+      <p class="menu-board-label"><span class="fdl" aria-hidden="true"></span> The full board</p>
 
       <div class="menu-tabs" role="tablist" aria-label="Menu categories">
         <button role="tab" id="tab-handhelds" aria-controls="panel-handhelds" aria-selected="true">Handhelds</button>
@@ -237,7 +298,7 @@
               <p class="menu-item-head"><span class="dish">Fried Ribs <span class="qual">w/FF</span></span><span class="dots" aria-hidden="true"></span><span class="price">$18</span></p>
             </li>
             <li class="menu-item">
-              <p class="menu-item-head"><span class="dish">Bayou Blaze Shrimp <span class="qual">w/FF</span></span><span class="dots" aria-hidden="true"></span><span class="price">$18</span></p>
+              <p class="menu-item-head"><span class="dish">Bayou Blaze Shrimp <span class="qual">w/FF</span> <span class="heat" title="Sweet &amp; spicy">🌶</span></span><span class="dots" aria-hidden="true"></span><span class="price">$18</span></p>
               <p class="desc">Golden fried shrimp tossed in our house sweet &amp; spicy sauce.</p>
             </li>
             <li class="menu-item">
@@ -269,8 +330,8 @@
             <ul class="flavor-list">
               <li>Lemon Pepper</li>
               <li>BBQ</li>
-              <li>Mango Habanero</li>
-              <li>Buffalo</li>
+              <li>Mango Habanero <span class="heat" title="Hot">🌶</span></li>
+              <li>Buffalo <span class="heat" title="Medium">🌶</span></li>
               <li>Garlic Parmesan</li>
               <li>Hot Honey</li>
             </ul>
@@ -506,27 +567,27 @@
 
       <div class="gallery-grid">
         <figure class="gallery-item">
-          <img src="assets/img/bayou-loaded-fries.jpg" alt="Bayou Loaded Fries topped with shrimp, hot sausage, bacon and Bayou Sauce, served with fried fish" loading="lazy" width="1050" height="1400">
+          <img data-lightbox src="assets/img/bayou-loaded-fries.jpg" alt="Bayou Loaded Fries topped with shrimp, hot sausage, bacon and Bayou Sauce, served with fried fish" loading="lazy" width="1050" height="1400">
           <figcaption>Bayou Loaded Fries</figcaption>
         </figure>
         <figure class="gallery-item">
-          <img src="assets/img/fried-ribs.jpg" alt="Fried ribs over seasoned fries with a side of dipping sauce" loading="lazy" width="900" height="1200">
+          <img data-lightbox src="assets/img/fried-ribs.jpg" alt="Fried ribs over seasoned fries with a side of dipping sauce" loading="lazy" width="900" height="1200">
           <figcaption>Fried Ribs w/ FF</figcaption>
         </figure>
         <figure class="gallery-item">
-          <img src="assets/img/chicken-tenders.jpg" alt="Sauced chicken tenders with a basket of steak fries" loading="lazy" width="900" height="1200">
+          <img data-lightbox src="assets/img/chicken-tenders.jpg" alt="Sauced chicken tenders with a basket of steak fries" loading="lazy" width="900" height="1200">
           <figcaption>Tenders &amp; Fries</figcaption>
         </figure>
         <figure class="gallery-item">
-          <img src="assets/img/wings-fried-okra.jpg" alt="Wings tossed in sauce with sliced jalapeños alongside fried okra" loading="lazy" width="900" height="1200">
+          <img data-lightbox src="assets/img/wings-fried-okra.jpg" alt="Wings tossed in sauce with sliced jalapeños alongside fried okra" loading="lazy" width="900" height="1200">
           <figcaption>Wings &amp; Fried Okra</figcaption>
         </figure>
         <figure class="gallery-item">
-          <img src="assets/img/fish-plate.jpg" alt="Fried fish with garlic bread and spaghetti in meat sauce" loading="lazy" width="1050" height="1400">
+          <img data-lightbox src="assets/img/fish-plate.jpg" alt="Fried fish with garlic bread and spaghetti in meat sauce" loading="lazy" width="1050" height="1400">
           <figcaption>Fish Plate</figcaption>
         </figure>
         <figure class="gallery-item">
-          <img src="assets/img/wings-shrimp-fries.jpg" alt="BBQ wings, sauced shrimp and loaded fries laid out in foil" loading="lazy" width="900" height="1200">
+          <img data-lightbox src="assets/img/wings-shrimp-fries.jpg" alt="BBQ wings, sauced shrimp and loaded fries laid out in foil" loading="lazy" width="900" height="1200">
           <figcaption>The Full Spread</figcaption>
         </figure>
       </div>
@@ -665,6 +726,36 @@
     <p><a href="#top">Back to top ↑</a></p>
   </div>
 </footer>
+
+
+<!-- ════════════ LIGHTBOX ════════════ -->
+<dialog class="lightbox" data-lightbox-dialog aria-label="Photo viewer">
+  <button class="lightbox-close" data-lightbox-close type="button" aria-label="Close">&times;</button>
+  <button class="lightbox-nav lightbox-prev" data-lightbox-prev type="button" aria-label="Previous photo">&#8249;</button>
+  <figure class="lightbox-figure">
+    <img data-lightbox-img src="" alt="">
+    <figcaption data-lightbox-caption></figcaption>
+  </figure>
+  <button class="lightbox-nav lightbox-next" data-lightbox-next type="button" aria-label="Next photo">&#8250;</button>
+</dialog>
+
+<!-- ════════════ MOBILE ACTION BAR ════════════ -->
+<!-- Phones are where a food truck gets found; keep calling and booking
+     one thumb-reach away no matter how far down the page you are. -->
+<div class="action-bar" data-action-bar>
+  <a class="action-bar-btn" href="tel:+12253715951" data-phone-href>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.2.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1l-2.3 2.2z"/></svg>
+    Call
+  </a>
+  <a class="action-bar-btn" href="#calendar">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v9H5v-9h14z"/></svg>
+    Find Us
+  </a>
+  <a class="action-bar-btn action-bar-primary" href="#catering">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.4 6.1 6.6.4-5.1 4.2 1.7 6.4L12 15.6 6.4 19.1l1.7-6.4L3 8.5l6.6-.4L12 2z"/></svg>
+    Book Us
+  </a>
+</div>
 
 <script src="assets/js/site-data.js"></script>
 <script src="assets/js/main.js"></script>

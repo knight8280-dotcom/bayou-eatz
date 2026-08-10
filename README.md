@@ -10,7 +10,7 @@ privacy.html               privacy policy (the forms collect data)
 assets/css/styles.css      styling (Mardi Gras palette from the logo)
 assets/js/site-data.js     ← edit this: contact, socials, calendar, hours
 assets/js/main.js          behavior (nav, tabs, calendar, forms, schema)
-assets/img/                logo, icons, share card, food photos
+assets/img/                logo, icons, share card, hero backdrop, food photos
 robots.txt sitemap.xml     search engines
 site.webmanifest           "add to home screen" on phones
 ```
@@ -80,13 +80,21 @@ The `schedule` array drives the "A typical week" section. Each entry:
 Whichever entry matches today's `day` gets highlighted with a **Today** badge.
 Update it whenever the route changes.
 
-### 4. Logo and photos — done
+### 4. Photos on the menu — check the pairings
+
+Four dishes carry a photo in the "House favorites" strip: Bayou Loaded Fries,
+Fried Ribs, Classic Burger and Wings. Each photo genuinely shows that dish —
+nothing was paired loosely to fill a slot, which is why the other items are
+text-only. If Chef Joe sends better shots, the `m-*.jpg` files in
+`assets/img/` are the ones to replace (square, 720×720).
+
+### 5. Logo and photos — done
 
 `assets/img/logo.webp` (and the smaller `logo-small.webp`) is the real logo,
 background removed so it sits on the dark page. The seven gallery and story
 photos are the real ones, resized and compressed for the web.
 
-### 5. Details still to confirm in `index.html`
+### 6. Details still to confirm in `index.html`
 
 Search the file for `EDIT:` to find each one.
 
@@ -99,13 +107,13 @@ Search the file for `EDIT:` to find each one.
   Chef Joe's own words
 - `<title>`, meta description and the canonical URL once the domain is chosen
 
-### 6. Reviews — off until they're real
+### 7. Reviews — off until they're real
 
 The reviews section is hidden and the `reviews` array in `site-data.js` is
 empty on purpose: nothing is invented. Paste in real quotes from Facebook or
 Google and the section turns itself on.
 
-### 7. Turn the domain on in three files
+### 8. Turn the domain on in three files
 
 When the real address is known, update it in `site-data.js` (`siteUrl`),
 `robots.txt`, and `sitemap.xml`. The `<link rel="canonical">` and share-card
@@ -216,5 +224,9 @@ on the page for getting found locally:
 - The email-list signup and the booking form both post to the same address.
 - Tested at 320, 390, 768, 1024, 1280 and 1600px — no horizontal scrolling at
   any of them.
-- Respects `prefers-reduced-motion` — animations are disabled for users who
-  ask for that.
+- Respects `prefers-reduced-motion` — the hero parallax, the marquee, the
+  status pulse and every reveal all stand still for anyone who asks for that.
+- The gallery lightbox is a native `<dialog>`, so focus trapping and Escape
+  come from the browser rather than being reimplemented.
+- On phones a sticky bar keeps Call / Find Us / Book Us in thumb reach. It
+  stays hidden over the hero, where those buttons are already on screen.
