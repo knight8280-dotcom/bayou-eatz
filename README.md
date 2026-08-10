@@ -5,11 +5,13 @@ open `index.html` in a browser and it runs.
 
 ```
 index.html                 the site — sections, menu and FAQ text
+post.html                  ← Chef Joe's page for posting stops (unlisted)
 privacy.html               privacy policy (the forms collect data)
 404.html                   "page not found"
 assets/css/styles.css      styling (Mardi Gras palette from the logo)
 assets/js/site-data.js     ← edit this: contact, socials, calendar, hours
 assets/js/main.js          behavior (nav, tabs, calendar, forms, schema)
+assets/js/post.js          the posting page
 assets/img/                logo, icons, share card, hero backdrop, food photos
 robots.txt sitemap.xml     search engines
 site.webmanifest           "add to home screen" on phones
@@ -35,7 +37,8 @@ values — everything is either in `assets/js/site-data.js` or marked in
 | `formEndpoint` | empty | ⬜ only if you'd rather not use the default (see below) |
 | `siteUrl` | https://bayoueatz.com | ⬜ set to the real domain before launch |
 | `serviceArea` / `city` / `region` | Baton Rouge & surrounding parishes | ⚠️ **guessed from the 225 area code — confirm** |
-| `hours` | Tue–Thu 11–7, Fri–Sat 11–10 | ⚠️ **placeholder — confirm** |
+| `hours` | empty | ✅ intentional — see below |
+| `stopsSheet.sheetId` | empty | ⬜ **the important one** — see §2 |
 
 These values populate every phone number, email, social link and Order button
 on the page, so you only enter them once.
@@ -43,7 +46,42 @@ on the page, so you only enter them once.
 **If `orderUrl` stays empty**, the Order buttons dial the phone instead and a
 note explains that online ordering isn't set up. Nothing breaks.
 
-### 2. Booking calendar — `assets/js/site-data.js`
+### 2. Posting where the truck will be
+
+**This is the one that matters day to day.** A truck moves; a schedule
+hard-coded into a website goes stale the day it ships. So Chef Joe posts stops
+himself, from his phone, and the site follows.
+
+**How he does it:** open **`/post.html`** on his phone (worth adding to the
+home screen — it behaves like an app). Fill in date, name, where, time. The
+page writes two things for him:
+
+1. **A row for the schedule sheet** — one paste, and it's on the website.
+2. **A post for Facebook and Instagram** — the same information written the
+   way you'd say it, with emoji and hashtags, ready to copy or share.
+
+He never types a date format or edits a file.
+
+**Setting up the sheet — once, about five minutes.** Full walkthrough is on
+`/post.html` itself, but in short:
+
+1. New Google Sheet with these headers across row 1:
+   `Date | Type | What | Where | Time | Note | Hide`
+2. **Share → Anyone with the link → Viewer.** The site only ever reads it;
+   nobody else can change it.
+3. Copy the long ID out of the sheet's address and paste it into
+   `stopsSheet.sheetId` in `site-data.js`. The posting page prints the exact
+   line to save.
+
+After that: add a row → it's on the site. Delete a row → it's gone. Put `yes`
+in the **Hide** column to pull a stop down without losing the record.
+
+The sheet is read through Google's JSONP endpoint, so there's no API key, no
+account for the website, and nothing to deploy. **If the sheet is empty, slow
+or unreachable, the site quietly falls back to the `bookings` list in
+`site-data.js`** — visitors never see an empty calendar.
+
+### 3. The fallback booking list — `assets/js/site-data.js`
 
 The `bookings` array drives the calendar and the "Coming up" list. One entry
 per committed date; anything not listed shows as **open for booking**.
@@ -60,11 +98,13 @@ per committed date; anything not listed shows as **open for booking**.
 
 Today's date is highlighted, past days are dimmed, and customers can't page
 back before the current month. **The entries in the file right now are
-examples — replace them with real dates.**
+examples.** Once the sheet is connected, this list is only a safety net — but
+it's worth leaving a few real stops in it so the page is never bare.
 
-### 3. Weekly route — `assets/js/site-data.js`
+### 4. Weekly route — `assets/js/site-data.js`
 
-The `schedule` array drives the "A typical week" section. Each entry:
+The `schedule` array drives the "Where we tend to be" section — a rough guide,
+deliberately secondary to the posted stops. Each entry:
 
 ```js
 {
@@ -80,7 +120,7 @@ The `schedule` array drives the "A typical week" section. Each entry:
 Whichever entry matches today's `day` gets highlighted with a **Today** badge.
 Update it whenever the route changes.
 
-### 4. Photos on the menu — check the pairings
+### 5. Photos on the menu — check the pairings
 
 Four dishes carry a photo in the "House favorites" strip: Bayou Loaded Fries,
 Fried Ribs, Classic Burger and Wings. Each photo genuinely shows that dish —
@@ -88,13 +128,13 @@ nothing was paired loosely to fill a slot, which is why the other items are
 text-only. If Chef Joe sends better shots, the `m-*.jpg` files in
 `assets/img/` are the ones to replace (square, 720×720).
 
-### 5. Logo and photos — done
+### 6. Logo and photos — done
 
 `assets/img/logo.webp` (and the smaller `logo-small.webp`) is the real logo,
 background removed so it sits on the dark page. The seven gallery and story
 photos are the real ones, resized and compressed for the web.
 
-### 6. Details still to confirm in `index.html`
+### 7. Details still to confirm in `index.html`
 
 Search the file for `EDIT:` to find each one.
 
@@ -107,13 +147,13 @@ Search the file for `EDIT:` to find each one.
   Chef Joe's own words
 - `<title>`, meta description and the canonical URL once the domain is chosen
 
-### 7. Reviews — off until they're real
+### 8. Reviews — off until they're real
 
 The reviews section is hidden and the `reviews` array in `site-data.js` is
 empty on purpose: nothing is invented. Paste in real quotes from Facebook or
 Google and the section turns itself on.
 
-### 8. Turn the domain on in three files
+### 9. Turn the domain on in three files
 
 When the real address is known, update it in `site-data.js` (`siteUrl`),
 `robots.txt`, and `sitemap.xml`. The `<link rel="canonical">` and share-card
@@ -210,6 +250,19 @@ on the page for getting found locally:
 
 ---
 
+## Why there are no opening hours
+
+`hours` is empty on purpose. A truck that's all over the parish doesn't have a
+storefront's opening times, and printing some anyway just creates a promise to
+break. With it empty the site says *"we move around — no fixed hours"* and
+points at the posted stops, and it tells Google the same rather than claiming
+hours that don't hold.
+
+If a genuinely fixed slot ever appears — a standing Friday brewery night, say —
+fill `hours` in and the footer and search data both pick it up automatically.
+
+---
+
 ## Notes
 
 - Fonts load from Google Fonts (Alfa Slab One, Cinzel, Karla). If the site is
@@ -230,3 +283,10 @@ on the page for getting found locally:
   come from the browser rather than being reimplemented.
 - On phones a sticky bar keeps Call / Find Us / Book Us in thumb reach. It
   stays hidden over the hero, where those buttons are already on screen.
+- The gallery is a horizontal rail with a label on every photo, arrows, dots
+  and a counter. Scrolling is the browser's own, so swipe, trackpad and
+  arrow keys all work; tapping a photo still opens the lightbox.
+- `/post.html` is `noindex, nofollow` and isn't linked from anywhere on the
+  site. It's not a secret — anyone who guesses the address can open it — but
+  it only ever writes text into boxes on screen. It has no power to change the
+  site on its own, so there's nothing there to abuse.

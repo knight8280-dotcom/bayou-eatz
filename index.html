@@ -77,8 +77,7 @@
 
     <nav class="site-nav" id="site-nav" aria-label="Main">
       <ul>
-        <li><a href="#find-us">Find Us</a></li>
-        <li><a href="#calendar">Calendar</a></li>
+        <li><a href="#calendar">Find Us</a></li>
         <li><a href="#menu">Menu</a></li>
         <li><a href="#catering">Book Us</a></li>
         <li><a href="#gallery">Gallery</a></li>
@@ -130,7 +129,7 @@
       </dl>
     </div>
 
-    <a class="hero-scroll" href="#find-us" aria-label="Scroll to the schedule">
+    <a class="hero-scroll" href="#calendar" aria-label="Scroll to the schedule">
       <span class="hero-scroll-line" aria-hidden="true"></span>
     </a>
 
@@ -143,29 +142,17 @@
     </div>
   </section>
 
-  <!-- ════════════ FIND US ════════════ -->
-  <section class="section section-find" id="find-us">
-    <div class="wrap">
-      <header class="section-head">
-        <p class="eyebrow">Where we're parked</p>
-        <h2>A typical week</h2>
-        <p class="section-sub">This is our usual route. For exact dates — including days we're out on private events — check the booking calendar below, and follow us on <a href="https://www.facebook.com/Bayoueatz" data-facebook target="_blank" rel="noopener">Facebook</a> for day-of updates and sellouts.</p>
-      </header>
-
-      <ol class="schedule" data-schedule>
-        <li class="schedule-empty">Check our <a href="https://www.facebook.com/Bayoueatz" target="_blank" rel="noopener">Facebook page</a> for this week's stops.</li>
-      </ol>
-    </div>
-  </section>
-
   <!-- ════════════ CALENDAR ════════════ -->
   <section class="section section-calendar" id="calendar">
     <div class="wrap">
       <header class="section-head">
-        <p class="eyebrow">Booking calendar</p>
-        <h2>Where we'll be</h2>
-        <p class="section-sub">Public stops are open to everybody — come on through. Booked days mean the truck is out on a private event. Open days are up for grabs — tap any date to ask about it.</p>
+        <p class="eyebrow">Where we're at</p>
+        <h2>Catch the truck</h2>
+        <p class="section-sub">We don't keep shop hours — we move. Chef Joe posts each stop here as it's booked, so this is always the real answer. Public stops are open to everybody; booked days mean we're out on a private event, and open days are up for grabs.</p>
       </header>
+
+      <div class="next-stop" data-next-stop hidden></div>
+      <p class="live-note" data-live-note hidden></p>
 
       <div class="cal-layout">
         <div class="cal-card">
@@ -200,6 +187,21 @@
           </div>
         </aside>
       </div>
+    </div>
+  </section>
+
+  <!-- ════════════ FIND US ════════════ -->
+  <section class="section section-find" id="find-us">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="eyebrow">Our usual rounds</p>
+        <h2>Where we tend to be</h2>
+        <p class="section-sub">A rough guide, not a promise — the truck goes where the work is. <a href="#calendar">The posted stops above</a> are the real answer, and <a href="https://www.facebook.com/Bayoueatz" data-facebook target="_blank" rel="noopener">Facebook</a> carries day-of changes and sellouts.</p>
+      </header>
+
+      <ol class="schedule" data-schedule>
+        <li class="schedule-empty">Check our <a href="https://www.facebook.com/Bayoueatz" target="_blank" rel="noopener">Facebook page</a> for this week's stops.</li>
+      </ol>
     </div>
   </section>
 
@@ -562,10 +564,18 @@
       <header class="section-head">
         <p class="eyebrow">From the window</p>
         <h2>Gallery</h2>
-        <p class="section-sub">Straight off the truck — no stock photos.</p>
+        <p class="section-sub">Straight off the truck — no stock photos. Swipe through, or tap a photo to see it full size.</p>
       </header>
 
-      <div class="gallery-grid">
+      <div class="rail-head">
+        <p class="rail-count"><span data-rail-current>1</span> <span aria-hidden="true">/</span><span class="sr-only">of</span> <span data-rail-total>6</span></p>
+        <div class="rail-controls">
+          <button class="rail-btn" type="button" data-rail-prev aria-label="Previous photo">&#8249;</button>
+          <button class="rail-btn" type="button" data-rail-next aria-label="Next photo">&#8250;</button>
+        </div>
+      </div>
+
+      <div class="gallery-rail" data-rail tabindex="0" role="region" aria-label="Food photos, scrollable">
         <figure class="gallery-item">
           <img data-lightbox src="assets/img/bayou-loaded-fries.jpg" alt="Bayou Loaded Fries topped with shrimp, hot sausage, bacon and Bayou Sauce, served with fried fish" loading="lazy" width="1050" height="1400">
           <figcaption>Bayou Loaded Fries</figcaption>
@@ -591,6 +601,8 @@
           <figcaption>The Full Spread</figcaption>
         </figure>
       </div>
+
+      <div class="rail-dots" data-rail-dots aria-hidden="true"></div>
 
       <div class="social-row">
         <p>More on socials, updated daily:</p>
@@ -704,11 +716,11 @@
       </ul>
     </div>
     <div>
-      <h3>Typical hours</h3>
+      <h3>Catching us</h3>
       <ul class="footer-list" data-hours>
-        <li>Tue – Thu · 11am – 7pm</li>
-        <li>Fri – Sat · 11am – 10pm</li>
-        <li>Sun – Mon · Private events</li>
+        <li>We move around — no fixed hours.</li>
+        <li><a href="#calendar">See the posted stops</a></li>
+        <li><a href="https://www.facebook.com/Bayoueatz" data-facebook target="_blank" rel="noopener">Day-of updates on Facebook</a></li>
       </ul>
       <p class="footer-area" data-service-area>Baton Rouge &amp; surrounding parishes</p>
     </div>

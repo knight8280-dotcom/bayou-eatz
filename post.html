@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Post a stop — Bayou Eatz</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#170a22">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Cinzel:wght@500;700;900&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="owner-page">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html" aria-label="Bayou Eatz — home">
+      <img class="brand-logo" src="assets/img/logo-small.webp" alt="Bayou Eatz" width="360" height="291">
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      <ul><li><a href="index.html">View the site</a></li></ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="section">
+    <div class="wrap owner-wrap">
+      <header class="section-head">
+        <p class="eyebrow">Owner tools · not listed on the site</p>
+        <h2>Post a stop</h2>
+        <p class="section-sub">Fill this in once and it writes everything for you — the row for your schedule sheet, and the post for Facebook and Instagram. Nothing here is public until you paste it into the sheet.</p>
+      </header>
+
+      <div class="owner-grid">
+        <form class="owner-form" data-post-form novalidate>
+          <div class="field">
+            <label for="p-date">Date <span class="req" aria-hidden="true">*</span></label>
+            <input id="p-date" name="date" type="date" required>
+            <p class="field-hint" data-day-hint></p>
+          </div>
+
+          <fieldset class="field">
+            <legend>Who's it for?</legend>
+            <div class="seg" role="radiogroup" aria-label="Stop type">
+              <label class="seg-opt">
+                <input type="radio" name="type" value="public" checked>
+                <span>Public — come eat</span>
+              </label>
+              <label class="seg-opt">
+                <input type="radio" name="type" value="private">
+                <span>Private booking</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="p-what">What to call it <span class="req" aria-hidden="true">*</span></label>
+            <input id="p-what" name="what" type="text" placeholder="Friday Night Lights, Downtown Lunch, Crawfish Boil…" required>
+          </div>
+
+          <div class="field" data-where-field>
+            <label for="p-where">Where you'll be parked</label>
+            <input id="p-where" name="where" type="text" placeholder="Corner of Main &amp; 3rd, behind the Chevron">
+            <p class="field-hint">Customers see this and get a directions link from it — a street address works best. Leave it off private bookings.</p>
+          </div>
+
+          <div class="field">
+            <label for="p-time">Time</label>
+            <input id="p-time" name="time" type="text" placeholder="11am – 3pm">
+          </div>
+
+          <div class="field">
+            <label for="p-note">Anything else? <span class="opt">optional</span></label>
+            <input id="p-note" name="note" type="text" placeholder="Cash only today · Wings while they last">
+          </div>
+
+          <p class="owner-hint">Change anything and the boxes on the right update as you type.</p>
+        </form>
+
+        <div class="owner-out">
+          <section class="out-card">
+            <h3>1 · Row for your sheet</h3>
+            <p class="out-help">Open the schedule sheet, tap the first empty row, and paste. That's what puts it on the website.</p>
+            <output class="out-box" data-out-row>—</output>
+            <div class="out-actions">
+              <button class="btn btn-primary btn-sm" type="button" data-copy="row">Copy the row</button>
+              <a class="btn btn-outline btn-sm" data-sheet-link href="#" target="_blank" rel="noopener">Open the sheet</a>
+            </div>
+            <p class="out-note" data-copy-note role="status" aria-live="polite"></p>
+          </section>
+
+          <section class="out-card">
+            <h3>2 · Post for Facebook &amp; Instagram</h3>
+            <p class="out-help">Same information, written the way you'd say it. Copy it, add a photo of the food, post.</p>
+            <output class="out-box out-box-post" data-out-social>—</output>
+            <div class="out-actions">
+              <button class="btn btn-primary btn-sm" type="button" data-copy="social">Copy the post</button>
+              <button class="btn btn-outline btn-sm" type="button" data-share hidden>Share…</button>
+            </div>
+          </section>
+
+          <section class="out-card out-card-quiet">
+            <h3>No sheet set up yet?</h3>
+            <p class="out-help">You can also paste this straight into <code>assets/js/site-data.js</code>, in the <code>bookings</code> list. Only worth it if you're comfortable editing the file.</p>
+            <output class="out-box out-box-code" data-out-code>—</output>
+            <div class="out-actions">
+              <button class="btn btn-outline btn-sm" type="button" data-copy="code">Copy the code line</button>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <section class="setup">
+        <h3>Setting the sheet up — once, about five minutes</h3>
+        <ol class="setup-steps">
+          <li>
+            <h4>Make the sheet</h4>
+            <p>New Google Sheet. Put these seven words across the very first row, one per column:</p>
+            <p class="setup-cols"><code>Date</code> <code>Type</code> <code>What</code> <code>Where</code> <code>Time</code> <code>Note</code> <code>Hide</code></p>
+          </li>
+          <li>
+            <h4>Let the website read it</h4>
+            <p><strong>Share</strong> → under <em>General access</em> choose <strong>Anyone with the link</strong>, and leave it as <strong>Viewer</strong>. Nobody can change it but you — the site only ever reads.</p>
+          </li>
+          <li>
+            <h4>Hand over the ID</h4>
+            <p>Copy the long stretch of characters out of the sheet's web address:</p>
+            <p class="setup-url">docs.google.com/spreadsheets/d/<strong>1a2B3c…this part…XyZ</strong>/edit</p>
+            <p>Paste it below and it'll tell you exactly what to do with it.</p>
+            <div class="setup-id">
+              <label class="sr-only" for="p-sheet">Sheet ID</label>
+              <input id="p-sheet" type="text" placeholder="Paste the sheet ID here" data-sheet-id>
+              <button class="btn btn-primary btn-sm" type="button" data-copy="sheet">Copy the setting</button>
+            </div>
+            <output class="out-box out-box-code" data-out-sheet>Paste an ID above and the line to save will appear here.</output>
+          </li>
+          <li>
+            <h4>From then on</h4>
+            <p>Add a row, and the website shows it. Delete a row and it's gone. Put <code>yes</code> in the <strong>Hide</strong> column to pull a stop down without losing the record of it.</p>
+          </li>
+        </ol>
+
+        <div class="setup-tip">
+          <p><strong>Keep this page one tap away.</strong> On your phone, open it and choose <em>Add to Home Screen</em> — it'll sit there like an app. Nobody else will find it: it isn't linked from the site and search engines are told to skip it.</p>
+        </div>
+      </section>
+
+      <p><a class="btn btn-outline" href="index.html">← Back to the site</a></p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-bottom">
+    <p>&copy; <span data-year>2026</span> Bayou Eatz — owner tools</p>
+    <p><a href="index.html">Home</a></p>
+  </div>
+</footer>
+
+<script src="assets/js/site-data.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/post.js"></script>
+</body>
+</html>

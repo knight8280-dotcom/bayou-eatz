@@ -214,6 +214,8 @@
     return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
   }
 
+  var calendarApi = null;
+
   function initCalendar() {
     var grid = $('[data-cal-grid]');
     if (!grid) return;
@@ -224,11 +226,16 @@
     var list  = $('[data-cal-upcoming]');
 
     // Group bookings by date so a day can hold more than one.
+    var stops = DATA.bookings || [];
     var byDate = {};
-    (DATA.bookings || []).forEach(function (b) {
-      if (!b || !b.date) return;
-      (byDate[b.date] = byDate[b.date] || []).push(b);
-    });
+    function index() {
+      byDate = {};
+      stops.forEach(function (b) {
+        if (!b || !b.date) return;
+        (byDate[b.date] = byDate[b.date] || []).push(b);
+      });
+    }
+    index();
 
     var today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -313,7 +320,7 @@
 
     function renderUpcoming() {
       if (!list) return;
-      var upcoming = (DATA.bookings || [])
+      var upcoming = stops
         .filter(function (b) { return b && b.date && parseDay(b.date) >= today; })
         .sort(function (a, b) { return a.date < b.date ? -1 : 1; })
         .slice(0, 5);
@@ -408,12 +415,9 @@
     prev.addEventListener("click", function () { shift(-1); });
     next.addEventListener("click", function () { shift(1); });
 
-    render();
-    renderUpcoming();
-
-    // Surface today's stop in the hero.
-    var heroNext = $('[data-hero-next]');
-    if (heroNext) {
+    function paintHero() {
+      var heroNext = $('[data-hero-next]');
+      if (!heroNext) return;
       var mine = byDate[key(today)];
       if (mine && mine.length) {
         var e = mine[0];
@@ -422,11 +426,97 @@
           : e.title + (e.time ? " · " + e.time : "");
       }
     }
+
+    render();
+    renderUpcoming();
+    paintHero();
+    renderNextStop();
+
+    // Handed back so live data from the sheet can replace the list
+    // without rebuilding the whole section.
+    calendarApi = {
+      setStops: function (list) {
+        stops = list;
+        index();
+        view = new Date(today.getFullYear(), today.getMonth(), 1);
+        render();
+        renderUpcoming();
+        paintHero();
+        renderNextStop();
+        initStatus();
+        applySchema();
+      },
+      getStops: function () { return stops; }
+    };
+  }
+
+  /* ── "Right now" banner ──────────────────────────────────────────
+     The single most asked question for a truck: where are you today?  */
+  function renderNextStop() {
+    var host = $('[data-next-stop]');
+    if (!host) return;
+
+    var stops = calendarApi ? calendarApi.getStops() : (DATA.bookings || []);
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    var todays = stops.filter(function (b) { return b.date === key(today) && b.type !== "private"; });
+    var upcoming = stops
+      .filter(function (b) { return b.type !== "private" && parseDay(b.date) > today; })
+      .sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+
+    var ev = todays[0] || upcoming[0];
+    host.innerHTML = "";
+    if (!ev) {
+      host.hidden = true;
+      return;
+    }
+    host.hidden = false;
+
+    var isToday = ev.date === key(today);
+    var d = parseDay(ev.date);
+
+    var label = document.createElement("p");
+    label.className = "next-stop-label";
+    label.textContent = isToday ? "We're out today" : "Next stop";
+
+    var where = document.createElement("p");
+    where.className = "next-stop-where";
+    where.textContent = ev.place || ev.title;
+
+    var when = document.createElement("p");
+    when.className = "next-stop-when";
+    when.textContent = (isToday ? "" : DAYS[d.getDay()] + ", " + MONTHS[d.getMonth()] + " " + d.getDate() + " · ") +
+                       (ev.time || "") + (ev.place && ev.title !== ev.place ? " · " + ev.title : "");
+
+    host.appendChild(label);
+    host.appendChild(where);
+    host.appendChild(when);
+
+    if (ev.note) {
+      var note = document.createElement("p");
+      note.className = "next-stop-note";
+      note.textContent = ev.note;
+      host.appendChild(note);
+    }
+
+    if (ev.place) {
+      var a = document.createElement("a");
+      a.className = "btn btn-primary";
+      a.href = mapsUrl(ev.place);
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = "Get directions";
+      host.appendChild(a);
+    }
   }
 
 
   /* ── Hours + service area ────────────────────────────────────── */
   function applyHours() {
+    // Only overwrite the footer when real hours exist. With none set, the
+    // markup already says "we move around" — which is the truth for a
+    // truck, and better than inventing a storefront's opening times.
     var list = $('[data-hours]');
     if (list && (DATA.hours || []).length) {
       list.innerHTML = "";
@@ -803,6 +893,148 @@
   }
 
 
+
+  /* ── Live stops from Chef Joe's sheet ────────────────────────────
+     A truck moves; a hard-coded schedule goes stale the day it ships.
+     The sheet is loaded through Google's JSONP endpoint via a <script>
+     tag — no API key, no CORS wrangling, and nothing to deploy when he
+     adds a row. If it's missing, slow or malformed we keep whatever is
+     already on the page.                                             */
+  function loadLiveStops() {
+    var cfg = DATA.stopsSheet || {};
+    var id = (cfg.sheetId || "").trim();
+    if (!id) return;
+
+    var CB = "__bayouStops" + Date.now();
+    var done = false;
+    var script = document.createElement("script");
+
+    var timer = setTimeout(function () { finish(null); },
+                           cfg.timeoutMs || 6000);
+
+    function finish(rows) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      try { delete window[CB]; } catch (e) { window[CB] = undefined; }
+      if (script.parentNode) script.parentNode.removeChild(script);
+      if (rows && rows.length && calendarApi) {
+        calendarApi.setStops(rows);
+        markLive(rows.length);
+      }
+    }
+
+    window[CB] = function (res) {
+      var rows = [];
+      try {
+        rows = parseSheet(res);
+      } catch (e) {
+        rows = [];
+      }
+      finish(rows);
+    };
+
+    script.src = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(id) +
+                 "/gviz/tq?tqx=out:json;responseHandler:" + CB +
+                 "&sheet=" + encodeURIComponent(cfg.sheetName || "Stops");
+    script.onerror = function () { finish(null); };
+    document.head.appendChild(script);
+  }
+
+  // Google hands dates back either as plain text or as the literal
+  // string "Date(2026,7,15)" — month zero-based — depending on how the
+  // column is formatted. Accept both so Joe doesn't have to care.
+  function cellDate(cell) {
+    if (!cell) return "";
+    var v = cell.f || cell.v;
+    if (v == null) return "";
+    v = String(v).trim();
+
+    var g = v.match(/^Date\((\d+),(\d+),(\d+)/);
+    if (g) {
+      return g[1] + "-" +
+        String(+g[2] + 1).padStart(2, "0") + "-" +
+        String(+g[3]).padStart(2, "0");
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+
+    // Fall back to whatever the browser makes of it (e.g. "8/15/2026")
+    var d = new Date(v);
+    return isNaN(d) ? "" : key(d);
+  }
+
+  function cellText(cell) {
+    if (!cell) return "";
+    var v = cell.f != null ? cell.f : cell.v;
+    return v == null ? "" : String(v).trim();
+  }
+
+  function parseSheet(res) {
+    var table = res && res.table;
+    if (!table || !table.rows) return [];
+
+    // Match columns by their header text so the sheet's column order
+    // can change without breaking the site.
+    var heads = (table.cols || []).map(function (c) {
+      return String((c && (c.label || c.id)) || "").toLowerCase().trim();
+    });
+    function col() {
+      for (var i = 0; i < arguments.length; i++) {
+        var want = arguments[i];
+        for (var j = 0; j < heads.length; j++) {
+          if (heads[j] === want) return j;
+        }
+      }
+      return -1;
+    }
+    var iDate = col("date", "when", "a");
+    var iType = col("type", "b");
+    var iWhat = col("what", "event", "title", "c");
+    var iWhere = col("where", "place", "location", "d");
+    var iTime = col("time", "hours", "e");
+    var iNote = col("note", "notes", "f");
+    var iHide = col("hide", "hidden", "g");
+
+    var out = [];
+    table.rows.forEach(function (row) {
+      var c = row && row.c;
+      if (!c) return;
+
+      var date = cellDate(c[iDate]);
+      if (!date) return;                                  // no date, no stop
+
+      var hide = cellText(c[iHide]).toLowerCase();
+      if (hide === "yes" || hide === "true" || hide === "x") return;
+
+      var type = cellText(c[iType]).toLowerCase();
+      type = (type.indexOf("priv") === 0 || type === "booked") ? "private" : "public";
+
+      var what = cellText(c[iWhat]);
+      var where = cellText(c[iWhere]);
+      if (!what && !where) what = type === "private" ? "Private event" : "Bayou Eatz";
+
+      out.push({
+        date:  date,
+        type:  type,
+        title: what || where,
+        place: type === "private" ? "" : where,
+        time:  cellText(c[iTime]) || (type === "private" ? "Booked" : ""),
+        note:  cellText(c[iNote])
+      });
+    });
+
+    out.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    return out;
+  }
+
+  function markLive(count) {
+    var el = $('[data-live-note]');
+    if (!el) return;
+    el.textContent = "Updated live from Chef Joe's schedule · " +
+                     count + (count === 1 ? " stop" : " stops") + " posted";
+    el.hidden = false;
+  }
+
   /* ── Hero parallax ───────────────────────────────────────────────
      Drifts the backdrop at a fraction of scroll speed. rAF-throttled,
      and skipped entirely for anyone who asked for less motion.      */
@@ -936,6 +1168,90 @@
     }, { passive: true });
   }
 
+
+  /* ── Gallery rail ────────────────────────────────────────────────
+     The scrolling is the browser's; this only adds the arrows, dots
+     and counter on top, so touch and trackpad keep working untouched. */
+  function initRail() {
+    var rail = $('[data-rail]');
+    if (!rail) return;
+
+    var items = $$('.gallery-item', rail);
+    if (!items.length) return;
+
+    var prev = $('[data-rail-prev]');
+    var next = $('[data-rail-next]');
+    var dots = $('[data-rail-dots]');
+    var cur  = $('[data-rail-current]');
+    var tot  = $('[data-rail-total]');
+
+    if (tot) tot.textContent = String(items.length);
+
+    var buttons = [];
+    if (dots) {
+      items.forEach(function (item, i) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "rail-dot";
+        var cap = item.querySelector("figcaption");
+        b.setAttribute("aria-label", "Go to " + (cap ? cap.textContent : "photo " + (i + 1)));
+        b.addEventListener("click", function () { scrollToItem(i); });
+        dots.appendChild(b);
+        buttons.push(b);
+      });
+      dots.removeAttribute("aria-hidden");
+    }
+
+    function scrollToItem(i) {
+      var item = items[Math.max(0, Math.min(items.length - 1, i))];
+      rail.scrollTo({ left: item.offsetLeft - rail.offsetLeft, behavior: "smooth" });
+    }
+
+    // Which slide is nearest the left edge — cheaper and steadier than
+    // an observer when the rail is mid-flick.
+    //
+    // At the far end the remaining slides can't reach the left edge, so
+    // position alone would stall the counter a few short of the last
+    // photo and light the wrong dot. Treat max scroll as "on the last".
+    function activeIndex() {
+      if (rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 2) {
+        return items.length - 1;
+      }
+      var best = 0, bestDist = Infinity;
+      items.forEach(function (item, i) {
+        var d = Math.abs((item.offsetLeft - rail.offsetLeft) - rail.scrollLeft);
+        if (d < bestDist) { bestDist = d; best = i; }
+      });
+      return best;
+    }
+
+    function sync() {
+      var i = activeIndex();
+      if (cur) cur.textContent = String(i + 1);
+      buttons.forEach(function (b, n) { b.classList.toggle("is-active", n === i); });
+      if (prev) prev.disabled = rail.scrollLeft <= 2;
+      if (next) next.disabled = rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 2;
+    }
+
+    if (prev) prev.addEventListener("click", function () { scrollToItem(activeIndex() - 1); });
+    if (next) next.addEventListener("click", function () { scrollToItem(activeIndex() + 1); });
+
+    rail.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight") { e.preventDefault(); scrollToItem(activeIndex() + 1); }
+      if (e.key === "ArrowLeft")  { e.preventDefault(); scrollToItem(activeIndex() - 1); }
+      if (e.key === "Home")       { e.preventDefault(); scrollToItem(0); }
+      if (e.key === "End")        { e.preventDefault(); scrollToItem(items.length - 1); }
+    });
+
+    var ticking = false;
+    rail.addEventListener("scroll", function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(function () { sync(); ticking = false; }); }
+    }, { passive: true });
+    window.addEventListener("resize", sync);
+
+    sync();
+  }
+
   /* ── Scroll-spy ──────────────────────────────────────────────────
      Marks the nav link for whichever section owns the viewport.     */
   function initScrollSpy() {
@@ -1023,8 +1339,10 @@
   initParallax();
   initStatus();
   initLightbox();
+  initRail();
   initScrollSpy();
   initActionBar();
   initMenuJumps();
   initYear();
+  loadLiveStops();
 })();

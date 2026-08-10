@@ -34,16 +34,17 @@ window.BAYOU = {
   city:        "Baton Rouge",                          /* ← CONFIRM THIS */
   region:      "LA",
 
-  /* ── Service hours ────────────────────────────────────────────────
-     Shown in the footer and given to Google. Use 24-hour times in
-     `opens`/`closes` (Google needs that format); `label` is what
-     people read. Set closed: true for days you don't serve.
-     ← CONFIRM THESE                                                  */
-  hours: [
-    { days: "Tue – Thu", label: "11am – 7pm",  opens: "11:00", closes: "19:00", schemaDays: ["Tuesday", "Wednesday", "Thursday"] },
-    { days: "Fri – Sat", label: "11am – 10pm", opens: "11:00", closes: "22:00", schemaDays: ["Friday", "Saturday"] },
-    { days: "Sun – Mon", label: "Private events only", closed: true }
-  ],
+  /* ── Service hours — OPTIONAL ─────────────────────────────────────
+     A truck isn't a storefront. Posting where you'll be beats printing
+     hours you then have to keep. Leave this empty (the default) and the
+     site says "we move around — check the calendar" instead, and tells
+     Google the same.
+
+     Only fill it in if there really are hours that hold every week:
+       { days: "Fri – Sat", label: "11am – 10pm",
+         opens: "11:00", closes: "22:00",
+         schemaDays: ["Friday", "Saturday"] }                          */
+  hours: [],
 
   /* ── Online ordering ──────────────────────────────────────────────
      Paste your Square / Toast / ChowNow / DoorDash link here.
@@ -66,6 +67,33 @@ window.BAYOU = {
      Netlify Forms URL here if you'd rather use one of those.          */
   formService:  "formsubmit",
   formEndpoint: "",
+
+  /* ══════════════════════════════════════════════════════════════════
+     POSTING WHERE THE TRUCK WILL BE  ← the important one
+     ──────────────────────────────────────────────────────────────────
+     Chef Joe keeps a Google Sheet on his phone. Add a row, and the
+     website shows it — no code, no commit, no waiting on anybody.
+
+     Setup, once:
+       1. Make a Google Sheet with these seven headers in row 1:
+            Date | Type | What | Where | Time | Note | Hide
+       2. Share → General access → "Anyone with the link" → Viewer.
+       3. Copy the long ID out of the sheet's address bar:
+            docs.google.com/spreadsheets/d/THIS-LONG-BIT/edit
+       4. Paste it as sheetId below. Done.
+
+     The /post.html page on this site writes the rows for him, so he
+     never has to remember the format.
+
+     If the sheet is empty, unreachable or slow, the site quietly falls
+     back to the `bookings` list further down — it never shows a blank
+     calendar.
+     ══════════════════════════════════════════════════════════════════ */
+  stopsSheet: {
+    sheetId:   "",          /* ← paste the sheet ID here to go live */
+    sheetName: "Stops",     /* the tab name inside the sheet */
+    timeoutMs: 6000
+  },
 
   /* ── Weekly route ─────────────────────────────────────────────────
      The "typical week" list. day: Sunday = 0 … Saturday = 6.        */
