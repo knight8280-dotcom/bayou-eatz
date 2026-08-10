@@ -153,11 +153,21 @@ The reviews section is hidden and the `reviews` array in `site-data.js` is
 empty on purpose: nothing is invented. Paste in real quotes from Facebook or
 Google and the section turns itself on.
 
-### 9. Turn the domain on in three files
+### 9. The live address
 
-When the real address is known, update it in `site-data.js` (`siteUrl`),
-`robots.txt`, and `sitemap.xml`. The `<link rel="canonical">` and share-card
-tags in `index.html` need it too.
+The site is live at:
+
+**https://knight8280-dotcom.github.io/bayou-eatz/**
+
+That address is written into four files — canonical link, share-card tags and
+search data in `index.html`, plus `sitemap.xml`, `robots.txt` and `siteUrl` in
+`site-data.js`.
+
+**If you buy a domain later**, find and replace
+`https://knight8280-dotcom.github.io/bayou-eatz` with the new address across
+those four files, add a `CNAME` file in the repo root containing just the
+domain, and point the DNS at GitHub. Nothing else needs touching — every asset
+path on the page is relative.
 
 ---
 

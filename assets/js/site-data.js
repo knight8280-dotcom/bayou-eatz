@@ -29,7 +29,7 @@ window.BAYOU = {
 
      serviceArea is the plain-English answer to "where do you go?" and
      appears in the footer and in search results.                      */
-  siteUrl:     "https://bayoueatz.com",
+  siteUrl:     "https://knight8280-dotcom.github.io/bayou-eatz",
   serviceArea: "Baton Rouge & surrounding parishes",   /* ← CONFIRM THIS */
   city:        "Baton Rouge",                          /* ← CONFIRM THIS */
   region:      "LA",

@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /post.html
 
-Sitemap: https://bayoueatz.com/sitemap.xml
+Sitemap: https://knight8280-dotcom.github.io/bayou-eatz/sitemap.xml
