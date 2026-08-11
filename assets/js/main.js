@@ -1035,6 +1035,183 @@
     el.hidden = false;
   }
 
+
+  /* ── The feed: Chef Joe's written updates ────────────────────────
+     Same sheet as the stops, different tab. A post is an announcement
+     first — "we're at the brewery tonight", "sold out, sorry" — and a
+     calendar entry only if it names a date.                          */
+  function loadPosts() {
+    var cfg = DATA.stopsSheet || {};
+    var id = (cfg.sheetId || "").trim();
+    if (!id) return;
+
+    var CB = "__bayouPosts" + Date.now();
+    var done = false;
+    var script = document.createElement("script");
+    var timer = setTimeout(function () { finish(null); }, cfg.timeoutMs || 6000);
+
+    function finish(rows) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      try { delete window[CB]; } catch (e) { window[CB] = undefined; }
+      if (script.parentNode) script.parentNode.removeChild(script);
+      if (rows && rows.length) renderPosts(rows);
+    }
+
+    window[CB] = function (res) {
+      var rows = [];
+      try { rows = parsePosts(res); } catch (e) { rows = []; }
+      finish(rows);
+    };
+
+    script.src = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(id) +
+                 "/gviz/tq?tqx=out:json;responseHandler:" + CB +
+                 "&sheet=" + encodeURIComponent(cfg.postsName || "Posts");
+    script.onerror = function () { finish(null); };
+    document.head.appendChild(script);
+  }
+
+  function parsePosts(res) {
+    var table = res && res.table;
+    if (!table || !table.rows) return [];
+
+    var heads = (table.cols || []).map(function (c) {
+      return String((c && (c.label || c.id)) || "").toLowerCase().trim();
+    });
+    function col() {
+      for (var i = 0; i < arguments.length; i++) {
+        for (var j = 0; j < heads.length; j++) {
+          if (heads[j] === arguments[i]) return j;
+        }
+      }
+      return -1;
+    }
+    var iWhen  = col("posted", "timestamp", "date", "a");
+    var iHead  = col("headline", "title", "b");
+    var iBody  = col("message", "post", "body", "text", "c");
+    var iWhere = col("where", "place", "location", "d");
+    var iTime  = col("when", "time", "hours", "e");
+    var iHide  = col("hide", "hidden", "f");
+
+    var out = [];
+    table.rows.forEach(function (row) {
+      var c = row && row.c;
+      if (!c) return;
+
+      var hide = cellText(c[iHide]).toLowerCase();
+      if (hide === "yes" || hide === "true" || hide === "x") return;
+
+      var head = cellText(c[iHead]);
+      var body = cellText(c[iBody]);
+      if (!head && !body) return;                    // nothing to show
+
+      out.push({
+        posted:  cellStamp(c[iWhen]),
+        headline: head,
+        message: body,
+        place:   cellText(c[iWhere]),
+        time:    cellText(c[iTime])
+      });
+    });
+
+    // newest first
+    out.sort(function (a, b) { return (b.posted || 0) - (a.posted || 0); });
+    return out;
+  }
+
+  // Apps Script writes a real timestamp, which gviz hands back as
+  // "Date(2026,7,15,18,4,0)". A hand-typed cell arrives as text.
+  function cellStamp(cell) {
+    if (!cell) return 0;
+    var v = cell.v == null ? cell.f : cell.v;
+    if (v == null) return 0;
+    var g = String(v).match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?/);
+    if (g) {
+      return new Date(+g[1], +g[2], +g[3], +(g[4] || 0), +(g[5] || 0), +(g[6] || 0)).getTime();
+    }
+    var d = new Date(String(v));
+    return isNaN(d) ? 0 : d.getTime();
+  }
+
+  // "just now" / "2 hours ago" reads as live; a bare date reads as stale.
+  function agoText(ms) {
+    if (!ms) return "";
+    var diff = Date.now() - ms;
+    var mins = Math.round(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return mins + (mins === 1 ? " minute ago" : " minutes ago");
+    var hrs = Math.round(mins / 60);
+    if (hrs < 24) return hrs + (hrs === 1 ? " hour ago" : " hours ago");
+    var days = Math.round(hrs / 24);
+    if (days < 7) return days + (days === 1 ? " day ago" : " days ago");
+    var d = new Date(ms);
+    return MONTHS[d.getMonth()] + " " + d.getDate();
+  }
+
+  function renderPosts(posts) {
+    var section = $('[data-feed-section]');
+    var list = $('[data-feed]');
+    if (!section || !list || !posts.length) return;
+
+    list.innerHTML = "";
+    posts.slice(0, 6).forEach(function (p, i) {
+      var li = document.createElement("li");
+      li.className = "post" + (i === 0 ? " is-latest" : "");
+
+      var meta = document.createElement("p");
+      meta.className = "post-meta";
+      if (i === 0) {
+        var tag = document.createElement("span");
+        tag.className = "post-tag";
+        tag.textContent = "Latest";
+        meta.appendChild(tag);
+      }
+      var when = document.createElement("time");
+      when.textContent = agoText(p.posted);
+      if (p.posted) when.dateTime = new Date(p.posted).toISOString();
+      meta.appendChild(when);
+      li.appendChild(meta);
+
+      if (p.headline) {
+        var h = document.createElement("h3");
+        h.className = "post-headline";
+        h.textContent = p.headline;
+        li.appendChild(h);
+      }
+      if (p.message) {
+        var body = document.createElement("p");
+        body.className = "post-body";
+        body.textContent = p.message;
+        li.appendChild(body);
+      }
+
+      if (p.place || p.time) {
+        var facts = document.createElement("p");
+        facts.className = "post-facts";
+        facts.textContent = [p.place, p.time].filter(Boolean).join(" · ");
+        li.appendChild(facts);
+      }
+
+      if (p.place) {
+        var a = document.createElement("a");
+        a.className = "post-link";
+        a.href = mapsUrl(p.place);
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = "Get directions";
+        li.appendChild(a);
+      }
+
+      list.appendChild(li);
+    });
+
+    section.hidden = false;
+    // The nav link only earns its place once there's something to link to.
+    var navLink = $('[data-feed-nav]');
+    if (navLink) navLink.hidden = false;
+  }
+
   /* ── Hero parallax ───────────────────────────────────────────────
      Drifts the backdrop at a fraction of scroll speed. rAF-throttled,
      and skipped entirely for anyone who asked for less motion.      */
@@ -1345,4 +1522,5 @@
   initMenuJumps();
   initYear();
   loadLiveStops();
+  loadPosts();
 })();

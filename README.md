@@ -12,6 +12,7 @@ assets/css/styles.css      styling (Mardi Gras palette from the logo)
 assets/js/site-data.js     ← edit this: contact, socials, calendar, hours
 assets/js/main.js          behavior (nav, tabs, calendar, forms, schema)
 assets/js/post.js          the posting page
+tools/apps-script.gs       paste into Google Apps Script to enable Publish
 assets/img/                logo, icons, share card, hero backdrop, food photos
 robots.txt sitemap.xml     search engines
 site.webmanifest           "add to home screen" on phones
@@ -39,6 +40,7 @@ values — everything is either in `assets/js/site-data.js` or marked in
 | `serviceArea` / `city` / `region` | Baton Rouge & surrounding parishes | ⚠️ **guessed from the 225 area code — confirm** |
 | `hours` | empty | ✅ intentional — see below |
 | `stopsSheet.sheetId` | empty | ⬜ **the important one** — see §2 |
+| `publishUrl` | empty | ⬜ optional — turns on the Publish button, see §2 |
 
 These values populate every phone number, email, social link and Order button
 on the page, so you only enter them once.
@@ -48,25 +50,53 @@ note explains that online ordering isn't set up. Nothing breaks.
 
 ### 2. Posting where the truck will be
 
+**One update, three places on the site.** When Chef Joe posts, it shows up as
+a dated entry in the **Latest word** feed near the top of the page, drives the
+**"where we're at"** banner, and — if it names a date — lands on the calendar.
+He writes it once.
+
+There are two ways to post, and the site supports both at the same time.
+
+**A. Publish straight from the site (the good one).** A **Publish** button on
+`/post.html`: he types the update, enters his passcode, taps once, and it's
+live. No spreadsheet, no copying, never leaves the website. Setup is a
+five-minute, one-time job described in `tools/apps-script.gs` — paste the
+script into the sheet's Apps Script editor, deploy it as a web app, and paste
+the address it gives you into `publishUrl` in `site-data.js`.
+
+The script runs as the sheet's owner, so **the website never holds a Google
+password or an API key** — only the web-app address and a passcode he types.
+Anyone who found the address still couldn't post without the passcode, and the
+worst they could do is add a row you delete.
+
+Because Google's reply to that request can't be read reliably from a browser,
+the page doesn't just claim success — it re-reads the sheet until the post
+actually appears, and tells him plainly if it can't confirm it.
+
+**B. Copy and paste (always available).** The same form writes a row to paste
+into the sheet by hand. This works with no setup at all and is the fallback if
+the publish endpoint is ever unreachable.
+
 **This is the one that matters day to day.** A truck moves; a schedule
 hard-coded into a website goes stale the day it ships. So Chef Joe posts stops
 himself, from his phone, and the site follows.
 
-**How he does it:** open **`/post.html`** on his phone (worth adding to the
-home screen — it behaves like an app). Fill in date, name, where, time. The
-page writes two things for him:
-
-1. **A row for the schedule sheet** — one paste, and it's on the website.
-2. **A post for Facebook and Instagram** — the same information written the
-   way you'd say it, with emoji and hashtags, ready to copy or share.
+**However he posts**, the page also writes the **Facebook and Instagram
+caption** for the same update — the same information phrased the way you'd say
+it, with emoji and hashtags, ready to copy or share. Open `/post.html` on his
+phone and add it to the home screen; it behaves like an app.
 
 He never types a date format or edits a file.
 
 **Setting up the sheet — once, about five minutes.** Full walkthrough is on
 `/post.html` itself, but in short:
 
-1. New Google Sheet with these headers across row 1:
+1. New Google Sheet with two tabs. **Stops** (the calendar):
    `Date | Type | What | Where | Time | Note | Hide`
+   and **Posts** (the written feed):
+   `Posted | Headline | Message | Where | When | Hide`
+   If you use the Publish button, both tabs are created for you the first
+   time something is posted.
 2. **Share → Anyone with the link → Viewer.** The site only ever reads it;
    nobody else can change it.
 3. Copy the long ID out of the sheet's address and paste it into
@@ -293,6 +323,10 @@ fill `hours` in and the footer and search data both pick it up automatically.
   come from the browser rather than being reimplemented.
 - On phones a sticky bar keeps Call / Find Us / Book Us in thumb reach. It
   stays hidden over the hero, where those buttons are already on screen.
+- The **Latest word** feed and its nav link stay hidden until there's a real
+  post, so a quiet week never leaves an empty section on the page.
+- Private bookings never publish their venue — not to the feed, not to the
+  calendar, not to the search data.
 - The gallery is a horizontal rail with a label on every photo, arrows, dots
   and a counter. Scrolling is the browser's own, so swipe, trackpad and
   arrow keys all work; tapping a photo still opens the lightbox.

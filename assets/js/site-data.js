@@ -91,9 +91,27 @@ window.BAYOU = {
      ══════════════════════════════════════════════════════════════════ */
   stopsSheet: {
     sheetId:   "",          /* ← paste the sheet ID here to go live */
-    sheetName: "Stops",     /* the tab name inside the sheet */
+    sheetName: "Stops",     /* the tab holding calendar stops */
+    postsName: "Posts",     /* the tab holding written updates */
     timeoutMs: 6000
   },
+
+  /* ══════════════════════════════════════════════════════════════════
+     PUBLISHING FROM THE SITE ITSELF
+     ──────────────────────────────────────────────────────────────────
+     Optional, and the nicer way to work. With this set, Chef Joe writes
+     an update on /post.html, taps Publish, and it appears on the site —
+     no spreadsheet, no copying, no leaving the website.
+
+     Setup is in tools/apps-script.gs: paste the script into the sheet's
+     Apps Script editor, deploy it as a web app, and paste the /exec
+     address it gives you below. The passcode lives in that script, not
+     here, so it never ships to the browser.
+
+     Leave publishUrl empty and the Publish button simply isn't shown —
+     the page still writes rows to copy by hand, exactly as before.
+     ══════════════════════════════════════════════════════════════════ */
+  publishUrl: "",
 
   /* ── Weekly route ─────────────────────────────────────────────────
      The "typical week" list. day: Sunday = 0 … Saturday = 6.        */

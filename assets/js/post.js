@@ -229,6 +229,177 @@
     });
   }
 
+
+  /* ── Publishing straight to the site ─────────────────────────────
+     The Apps Script endpoint runs as the sheet's owner, so the browser
+     never holds a Google credential — only the web-app address and a
+     passcode Chef Joe types.
+
+     Apps Script redirects its response through googleusercontent, which
+     makes a readable cross-origin reply unreliable. Rather than guess,
+     the request goes out no-cors and then the sheet is re-read until the
+     post shows up. Slower to confirm, but it's the truth rather than an
+     optimistic "sent".                                                */
+  var publishCard = $('[data-publish-card]');
+  var publishNote = $('[data-publish-note]');
+  var codeInput   = $('[data-publish-code]');
+  var rememberBox = $('[data-publish-remember]');
+  var CODE_KEY    = "bayou.publish.code";
+
+  function publishUrl() {
+    return String((DATA.publishUrl || "")).trim();
+  }
+
+  if (publishCard && publishUrl()) {
+    publishCard.hidden = false;
+    try {
+      var saved = localStorage.getItem(CODE_KEY);
+      if (saved && codeInput) {
+        codeInput.value = saved;
+        if (rememberBox) rememberBox.checked = true;
+      }
+    } catch (e) { /* private browsing — just type it each time */ }
+  }
+
+  function say(msg, kind) {
+    if (!publishNote) return;
+    publishNote.textContent = msg;
+    publishNote.className = "out-note" + (kind ? " is-" + kind : "");
+  }
+
+  // Ask the sheet whether the post arrived. Returns a promise for the
+  // most recent headline it can see.
+  function latestPostedHeadline() {
+    return new Promise(function (resolve) {
+      var cfg = DATA.stopsSheet || {};
+      var id = (cfg.sheetId || "").trim();
+      if (!id) return resolve(null);
+
+      var CB = "__bayouCheck" + Date.now();
+      var s = document.createElement("script");
+      var t = setTimeout(function () { cleanup(); resolve(null); }, 5000);
+
+      function cleanup() {
+        clearTimeout(t);
+        try { delete window[CB]; } catch (e) { window[CB] = undefined; }
+        if (s.parentNode) s.parentNode.removeChild(s);
+      }
+
+      window[CB] = function (res) {
+        var best = null, bestAt = -1;
+        try {
+          var rows = (res.table && res.table.rows) || [];
+          var heads = (res.table.cols || []).map(function (c) {
+            return String((c && (c.label || c.id)) || "").toLowerCase().trim();
+          });
+          var iHead = heads.indexOf("headline");
+          var iWhen = heads.indexOf("posted");
+          rows.forEach(function (r, n) {
+            var c = r && r.c;
+            if (!c) return;
+            var at = iWhen >= 0 && c[iWhen] ? n : n;   // sheet order is append order
+            if (at >= bestAt) {
+              bestAt = at;
+              best = c[iHead] && (c[iHead].f != null ? c[iHead].f : c[iHead].v);
+            }
+          });
+        } catch (e) { best = null; }
+        cleanup();
+        resolve(best == null ? null : String(best).trim());
+      };
+
+      s.src = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(id) +
+              "/gviz/tq?tqx=out:json;responseHandler:" + CB +
+              "&sheet=" + encodeURIComponent(cfg.postsName || "Posts") +
+              "&_=" + Date.now();
+      s.onerror = function () { cleanup(); resolve(null); };
+      document.head.appendChild(s);
+    });
+  }
+
+  var publishBtn = $('[data-publish]');
+  if (publishBtn) {
+    publishBtn.addEventListener("click", function () {
+      var v = values();
+      if (!v.date || !v.what) {
+        say("Add a date and a name first.", "error");
+        return;
+      }
+      var code = (codeInput && codeInput.value || "").trim();
+      if (!code) {
+        say("Enter your passcode.", "error");
+        if (codeInput) codeInput.focus();
+        return;
+      }
+
+      try {
+        if (rememberBox && rememberBox.checked) localStorage.setItem(CODE_KEY, code);
+        else localStorage.removeItem(CODE_KEY);
+      } catch (e) { /* nothing to do */ }
+
+      publishBtn.disabled = true;
+      say("Publishing…");
+
+      // text/plain keeps this a "simple" request, so the browser doesn't
+      // preflight it — Apps Script can't answer a preflight.
+      fetch(publishUrl(), {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          passcode: code,
+          date:     v.date,
+          type:     v.type,
+          headline: v.what,
+          where:    v.where,
+          when:     v.time,
+          message:  v.note
+        })
+      })
+      .then(function () {
+        // Give the sheet a moment, then check it really landed.
+        say("Sent — checking it went through…");
+        var tries = 0;
+        (function poll() {
+          tries++;
+          setTimeout(function () {
+            latestPostedHeadline().then(function (head) {
+              if (head && head === v.what) {
+                say("Posted. It's on the website now.", "ok");
+                publishBtn.disabled = false;
+                return;
+              }
+              if (tries < 4) return poll();
+              say("Sent, but we couldn't confirm it landed. Check the sheet — " +
+                  "and if the row isn't there, the passcode is usually the reason.", "error");
+              publishBtn.disabled = false;
+            });
+          }, 1500);
+        })();
+      })
+      .catch(function () {
+        say("Couldn't reach the publishing address. Use the copy-and-paste row below instead.", "error");
+        publishBtn.disabled = false;
+      });
+    });
+  }
+
+  /* Setup helper for the publish URL */
+  var pubInput = $('[data-publish-url]');
+  var pubOut = $('[data-out-publish]');
+  function renderPublishSetting() {
+    if (!pubOut) return;
+    var raw = (pubInput && pubInput.value || "").trim();
+    pubOut.textContent = raw
+      ? 'publishUrl: "' + raw + '",\n\n↑ save this in assets/js/site-data.js'
+      : "Paste the address above and the line to save will appear here.";
+  }
+  if (pubInput) pubInput.addEventListener("input", renderPublishSetting);
+  SOURCES.publish = function () {
+    return (pubOut ? pubOut.textContent : "").split("\n\n↑")[0];
+  };
+  renderPublishSetting();
+
   render();
   renderSheet();
   updateSheetLink();

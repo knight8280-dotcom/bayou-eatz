@@ -440,6 +440,54 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .9em; c
 .find-note p { margin: 0; color: var(--text-dim); max-width: 60ch; }
 .find-note strong { color: var(--cream); }
 
+/* ── The feed ────────────────────────────────────────────────────── */
+.section-feed {
+  background: linear-gradient(180deg, var(--ink), #170a22);
+  border-bottom: 1px solid var(--rule);
+}
+.section-feed[hidden] { display: none; }
+.feed { display: grid; gap: 1rem; max-width: 62rem; }
+.post {
+  position: relative;
+  padding: 1.35rem 1.5rem 1.5rem;
+  border: 1px solid var(--rule); border-left: 3px solid var(--purple-lt);
+  border-radius: var(--radius);
+  background: rgb(36 16 49 / .5);
+}
+/* The newest post is the one people came for — give it the gold edge. */
+.post.is-latest {
+  border-left-color: var(--gold);
+  background:
+    radial-gradient(120% 160% at 0% 0%, rgb(91 33 131 / .5), transparent 62%),
+    rgb(27 11 38 / .8);
+  box-shadow: var(--shadow);
+}
+.post-meta {
+  display: flex; align-items: center; gap: .6rem; margin: 0 0 .5rem;
+  font: 700 .72rem/1 var(--body);
+  letter-spacing: .16em; text-transform: uppercase; color: var(--text-dim);
+}
+.post-tag {
+  padding: .3rem .5rem; border-radius: 4px;
+  background: var(--gold); color: #2a1405; letter-spacing: .12em;
+}
+.post-headline {
+  margin: 0 0 .4rem;
+  font: 900 clamp(1.15rem, 1rem + .8vw, 1.6rem)/1.15 var(--heading);
+  text-transform: uppercase; letter-spacing: .02em; color: var(--cream);
+}
+.post-body { margin: 0 0 .6rem; color: var(--text-dim); max-width: 62ch; }
+.post-facts {
+  margin: 0; font: 700 .88rem/1.4 var(--body); color: var(--gold-lt);
+}
+.post-link {
+  display: inline-block; margin-top: .7rem;
+  font: 700 .74rem/1 var(--body); letter-spacing: .1em;
+  text-transform: uppercase; color: var(--gold);
+  border-bottom: 1px solid transparent; padding-bottom: 2px;
+}
+.post-link:hover { border-bottom-color: var(--gold); }
+
 /* ── "Where we are" banner ───────────────────────────────────────── */
 .next-stop {
   display: grid; gap: .35rem; justify-items: start;
@@ -1466,3 +1514,32 @@ html:not(.js) .menu-panel + .menu-panel {
   .owner-grid { grid-template-columns: 1fr; }
   .owner-form { position: static; }
 }
+
+/* ── Publish box on the owner page ───────────────────────────────── */
+.out-card-publish {
+  border-color: var(--gold-dk);
+  background: linear-gradient(135deg, rgb(91 33 131 / .4), rgb(27 11 38 / .75));
+}
+.out-card-publish[hidden] { display: none; }
+.publish-row { display: flex; flex-wrap: wrap; gap: .6rem; }
+.publish-row input {
+  flex: 1 1 12rem; min-width: 0;
+  font: 400 1rem/1.4 var(--body); color: var(--cream);
+  background: rgb(255 255 255 / .06);
+  border: 1px solid var(--rule); border-radius: 999px;
+  padding: .85rem 1.1rem;
+}
+.publish-row input:focus { border-color: var(--gold); outline: none; }
+.publish-remember {
+  display: flex; align-items: center; gap: .5rem;
+  margin-top: .7rem; font-size: .82rem; color: var(--text-dim);
+}
+.publish-remember input { accent-color: var(--gold); width: 16px; height: 16px; }
+.owner-form textarea {
+  font: 400 1rem/1.5 var(--body); color: var(--cream);
+  background: rgb(255 255 255 / .05);
+  border: 1px solid var(--rule); border-radius: 10px;
+  padding: .8rem .9rem; width: 100%; resize: vertical;
+}
+.owner-form textarea:focus { border-color: var(--gold); outline: none; }
+.owner-form textarea::placeholder { color: #8c7d95; }
