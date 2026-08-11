@@ -79,6 +79,12 @@
             <textarea id="p-note" name="note" rows="3" placeholder="Pulling up early today. Wings while they last — come get it."></textarea>
           </div>
 
+          <div class="field">
+            <label for="p-photo">Photo link <span class="opt">needed for Instagram</span></label>
+            <input id="p-photo" name="photo" type="url" inputmode="url" placeholder="https://…jpg">
+            <p class="field-hint">Instagram won't accept a post without a picture — that's Meta's rule. Leave it empty and the update still goes to the website and Facebook.</p>
+          </div>
+
           <p class="owner-hint">Change anything and the boxes on the right update as you type.</p>
         </form>
 
@@ -86,7 +92,8 @@
           <!-- Only shown once publishUrl is set in site-data.js -->
           <section class="out-card out-card-publish" data-publish-card hidden>
             <h3>Publish to the website</h3>
-            <p class="out-help">One tap and it's live — the post, the banner and the calendar all at once. No spreadsheet.</p>
+            <p class="out-help">One tap and it's live — the post, the banner, the calendar and your socials, all at once.</p>
+            <p class="publish-targets" data-publish-targets></p>
             <div class="publish-row">
               <label class="sr-only" for="p-code">Passcode</label>
               <input id="p-code" type="password" inputmode="text" placeholder="Your passcode" autocomplete="current-password" data-publish-code>

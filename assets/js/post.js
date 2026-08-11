@@ -49,7 +49,8 @@
       what:  (fd.get("what") || "").trim(),
       where: type === "private" ? "" : (fd.get("where") || "").trim(),
       time:  (fd.get("time") || "").trim(),
-      note:  (fd.get("note") || "").trim()
+      note:  (fd.get("note") || "").trim(),
+      photo: (fd.get("photo") || "").trim()
     };
   }
 
@@ -133,7 +134,7 @@
     outCode.textContent   = ready ? codeFor(v) : "—";
   }
 
-  form.addEventListener("input", render);
+  form.addEventListener("input", function () { render(); renderTargets(); });
   form.addEventListener("change", render);
   form.addEventListener("submit", function (e) { e.preventDefault(); });
 
@@ -261,6 +262,16 @@
     } catch (e) { /* private browsing — just type it each time */ }
   }
 
+  function renderTargets() {
+    var el = $('[data-publish-targets]');
+    if (!el) return;
+    var v = values();
+    var bits = ["Website"];
+    bits.push("Facebook");
+    bits.push(v.photo ? "Instagram" : "Instagram (needs a photo)");
+    el.textContent = "Goes to: " + bits.join(" · ");
+  }
+
   function say(msg, kind) {
     if (!publishNote) return;
     publishNote.textContent = msg;
@@ -269,7 +280,7 @@
 
   // Ask the sheet whether the post arrived. Returns a promise for the
   // most recent headline it can see.
-  function latestPostedHeadline() {
+  function latestPosted() {
     return new Promise(function (resolve) {
       var cfg = DATA.stopsSheet || {};
       var id = (cfg.sheetId || "").trim();
@@ -286,26 +297,31 @@
       }
 
       window[CB] = function (res) {
-        var best = null, bestAt = -1;
+        var out = null;
         try {
           var rows = (res.table && res.table.rows) || [];
           var heads = (res.table.cols || []).map(function (c) {
             return String((c && (c.label || c.id)) || "").toLowerCase().trim();
           });
           var iHead = heads.indexOf("headline");
-          var iWhen = heads.indexOf("posted");
-          rows.forEach(function (r, n) {
-            var c = r && r.c;
-            if (!c) return;
-            var at = iWhen >= 0 && c[iWhen] ? n : n;   // sheet order is append order
-            if (at >= bestAt) {
-              bestAt = at;
-              best = c[iHead] && (c[iHead].f != null ? c[iHead].f : c[iHead].v);
-            }
-          });
-        } catch (e) { best = null; }
+          var iShared = heads.indexOf("shared");
+          // Rows arrive in append order, so the last one is the newest.
+          for (var n = rows.length - 1; n >= 0; n--) {
+            var c = rows[n] && rows[n].c;
+            if (!c) continue;
+            var head = c[iHead] && (c[iHead].f != null ? c[iHead].f : c[iHead].v);
+            if (head == null) continue;
+            out = {
+              headline: String(head).trim(),
+              shared: iShared >= 0 && c[iShared]
+                ? String(c[iShared].f != null ? c[iShared].f : c[iShared].v).trim()
+                : ""
+            };
+            break;
+          }
+        } catch (e) { out = null; }
         cleanup();
-        resolve(best == null ? null : String(best).trim());
+        resolve(out);
       };
 
       s.src = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(id) +
@@ -315,6 +331,25 @@
       s.onerror = function () { cleanup(); resolve(null); };
       document.head.appendChild(s);
     });
+  }
+
+  // Turn the sheet's terse "FB ✓ · IG –" into something worth reading.
+  function shareMessage(shared) {
+    if (!shared || shared === "site only") {
+      return "Posted. It's on the website now.";
+    }
+    var went = ["the website"];
+    if (shared.indexOf("FB ✓") > -1) went.push("Facebook");
+    if (shared.indexOf("IG ✓") > -1) went.push("Instagram");
+    var msg = "Posted to " + (went.length > 1
+      ? went.slice(0, -1).join(", ") + " and " + went[went.length - 1]
+      : went[0]) + ".";
+    if (shared.indexOf("IG –") > -1) msg += " Instagram was skipped — no photo on this one.";
+    if (shared.indexOf("✗") > -1) msg += " One of the socials refused it — check the script's logs.";
+    return msg;
+  }
+  function shareKind(shared) {
+    return (shared && shared.indexOf("✗") > -1) ? "error" : "ok";
   }
 
   var publishBtn = $('[data-publish]');
@@ -353,7 +388,11 @@
           headline: v.what,
           where:    v.where,
           when:     v.time,
-          message:  v.note
+          message:  v.note,
+          photo:    v.photo,
+          // Send the caption the page just showed him, so what he read in
+          // the preview is word-for-word what goes out.
+          caption:  socialFor(v)
         })
       })
       .then(function () {
@@ -363,9 +402,9 @@
         (function poll() {
           tries++;
           setTimeout(function () {
-            latestPostedHeadline().then(function (head) {
-              if (head && head === v.what) {
-                say("Posted. It's on the website now.", "ok");
+            latestPosted().then(function (found) {
+              if (found && found.headline === v.what) {
+                say(shareMessage(found.shared), shareKind(found.shared));
                 publishBtn.disabled = false;
                 return;
               }
@@ -401,6 +440,7 @@
   renderPublishSetting();
 
   render();
+  renderTargets();
   renderSheet();
   updateSheetLink();
 })();

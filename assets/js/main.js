@@ -573,9 +573,31 @@
         return;
       }
 
-      var endpoint = resolveEndpoint();
       status.textContent = "Adding you…";
       status.className = "form-status";
+
+      // When the publishing endpoint exists, subscribers go into the
+      // Subscribers tab so the weekly email actually has a list to send
+      // to. Otherwise fall back to emailing the address across.
+      var publish = String(DATA.publishUrl || "").trim();
+      if (publish) {
+        fetch(publish, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ subscribe: value })
+        }).then(function () {
+          form.reset();
+          status.textContent = "You're on the list. See you at the window.";
+          status.className = "form-status is-ok";
+        }).catch(function () {
+          status.textContent = "That didn't go through — email " + (DATA.email || "us") + " and we'll add you.";
+          status.className = "form-status is-error";
+        });
+        return;
+      }
+
+      var endpoint = resolveEndpoint();
 
       if (!endpoint) {
         window.location.href = "mailto:" + (DATA.email || "") +

@@ -13,6 +13,7 @@ assets/js/site-data.js     ← edit this: contact, socials, calendar, hours
 assets/js/main.js          behavior (nav, tabs, calendar, forms, schema)
 assets/js/post.js          the posting page
 tools/apps-script.gs       paste into Google Apps Script to enable Publish
+tools/SOCIAL-SETUP.md      connecting Facebook & Instagram auto-posting
 assets/img/                logo, icons, share card, hero backdrop, food photos
 robots.txt sitemap.xml     search engines
 site.webmanifest           "add to home screen" on phones
@@ -73,6 +74,24 @@ Because Google's reply to that request can't be read reliably from a browser,
 the page doesn't just claim success — it re-reads the sheet until the post
 actually appears, and tells him plainly if it can't confirm it.
 
+**Publishing also fires the socials.** With Facebook and Instagram connected
+(see `tools/SOCIAL-SETUP.md`), one tap puts the update on the website, the
+Facebook page and Instagram together, using the exact caption the page showed
+him in the preview. The **Shared** column in the Posts tab records what went
+where, and the page reads it back so he knows before he closes the phone.
+
+Two limits are Meta's, not ours, and the site is honest about both:
+
+- **Instagram cannot post text.** An update with no photo goes to the website
+  and Facebook and skips Instagram. The publish box says so before he taps.
+- **Instagram must be a Business or Creator account** linked to the Facebook
+  page. A personal account can't be posted to by any API.
+
+The Facebook and Instagram tokens live in the Apps Script, on Google's
+servers. **They are never in this repo and never reach a visitor's browser** —
+that matters, because the repo is public and a page token is as good as a
+password for the page.
+
 **B. Copy and paste (always available).** The same form writes a row to paste
 into the sheet by hand. This works with no setup at all and is the fallback if
 the publish endpoint is ever unreachable.
@@ -110,6 +129,28 @@ The sheet is read through Google's JSONP endpoint, so there's no API key, no
 account for the website, and nothing to deploy. **If the sheet is empty, slow
 or unreachable, the site quietly falls back to the `bookings` list in
 `site-data.js`** — visitors never see an empty calendar.
+
+### 2b. What else the script automates
+
+Once the publishing script is installed, three more things become available.
+All are optional and all are set up from the Apps Script editor.
+
+| Function | What it does | How to run it |
+|---|---|---|
+| `weeklyEmail` | Emails subscribers the coming week's public stops | Triggers → Add trigger → Time-driven → Week timer |
+| `tidyOldStops` | Hides stops older than 60 days so the sheet stays readable | Triggers → daily, or run by hand |
+| `testConnections` | Checks the Facebook and Instagram tokens still work | Run it from the editor whenever posts stop appearing |
+
+**The mailing list now works properly.** Signups used to email Chef Joe one
+address at a time, which is not a list anybody can send to — the site promised
+subscribers "the week's stops" and had no way to keep it. With the script
+installed, signups land in a **Subscribers** tab and `weeklyEmail` sends to
+them. Without it, the old email-forwarding behaviour still applies.
+
+Note that Gmail caps sending at roughly 100 messages a day on a free account,
+1,500 on Workspace. `weeklyEmail` stops cleanly and logs where it got to
+rather than half-sending, but a list bigger than that needs a real mailing
+service.
 
 ### 3. The fallback booking list — `assets/js/site-data.js`
 
@@ -323,6 +364,10 @@ fill `hours` in and the footer and search data both pick it up automatically.
   come from the browser rather than being reimplemented.
 - On phones a sticky bar keeps Call / Find Us / Book Us in thumb reach. It
   stays hidden over the hero, where those buttons are already on screen.
+- Auto-posting degrades in stages rather than breaking: no tokens → website
+  only; token expired → website plus the caption to paste; no photo →
+  everything except Instagram. The site never claims a post went somewhere it
+  didn't.
 - The **Latest word** feed and its nav link stay hidden until there's a real
   post, so a quiet week never leaves an empty section on the page.
 - Private bookings never publish their venue — not to the feed, not to the

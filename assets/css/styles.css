@@ -1521,6 +1521,10 @@ html:not(.js) .menu-panel + .menu-panel {
   background: linear-gradient(135deg, rgb(91 33 131 / .4), rgb(27 11 38 / .75));
 }
 .out-card-publish[hidden] { display: none; }
+.publish-targets {
+  margin: 0 0 .9rem; font: 700 .72rem/1.4 var(--body);
+  letter-spacing: .1em; text-transform: uppercase; color: var(--gold);
+}
 .publish-row { display: flex; flex-wrap: wrap; gap: .6rem; }
 .publish-row input {
   flex: 1 1 12rem; min-width: 0;
