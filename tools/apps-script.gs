@@ -102,13 +102,20 @@ function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
 
-    if (String(body.passcode || '') !== PASSCODE) {
-      return reply({ ok: false, error: 'bad passcode' });
+    // Mailing-list signups come from the public site with no passcode —
+    // anyone may join — so they're handled BEFORE the passcode gate.
+    // Checking the passcode first would reject every signup, and because
+    // the browser can't read this reply, the visitor would still be told
+    // "you're on the list" while the address was thrown away.
+    if (body.subscribe) {
+      if (!allowSignup()) {
+        return reply({ ok: false, error: 'too many signups right now' });
+      }
+      return reply(addSubscriber(String(body.subscribe)));
     }
 
-    // A mailing-list signup is a different animal — handle and return.
-    if (body.subscribe) {
-      return reply(addSubscriber(String(body.subscribe)));
+    if (String(body.passcode || '') !== PASSCODE) {
+      return reply({ ok: false, error: 'bad passcode' });
     }
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -231,14 +238,32 @@ function composeCaption(b) {
    The site promises subscribers "the week's stops" — this is where the
    addresses land so that promise can actually be kept.
    ═══════════════════════════════════════════════════════════════════ */
+/** The open signup path needs a ceiling, since there's no passcode on it.
+ *  Apps Script can't see the caller's address, so this is a global
+ *  count: at most SIGNUPS_PER_MINUTE across everyone. Real traffic for a
+ *  food truck never gets close; a script hammering it does. */
+var SIGNUPS_PER_MINUTE = 20;
+var MAX_SUBSCRIBERS = 5000;
+
+function allowSignup() {
+  var cache = CacheService.getScriptCache();
+  var key = 'signups-' + Math.floor(Date.now() / 60000);
+  var n = Number(cache.get(key) || 0) + 1;
+  cache.put(key, String(n), 120);
+  return n <= SIGNUPS_PER_MINUTE;
+}
+
 function addSubscriber(email) {
   email = email.trim().toLowerCase();
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+  if (email.length > 254 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return { ok: false, error: 'that email does not look right' };
   }
 
   var sheet = tab(SpreadsheetApp.getActiveSpreadsheet(), SUBS_TAB, SUBS_HEADERS);
   var existing = sheet.getDataRange().getValues();
+  if (existing.length - 1 >= MAX_SUBSCRIBERS) {
+    return { ok: false, error: 'list is full' };
+  }
   for (var i = 1; i < existing.length; i++) {
     if (String(existing[i][1]).trim().toLowerCase() === email) {
       return { ok: true, already: true };
