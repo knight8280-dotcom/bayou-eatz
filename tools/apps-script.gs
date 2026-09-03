@@ -288,7 +288,7 @@ function weeklyEmail() {
     var row = stops[i];
     if (String(row[6]).toLowerCase() === 'yes') continue;      // Hide
     if (String(row[1]).toLowerCase() === 'private') continue;  // not public
-    var when = row[0] instanceof Date ? row[0] : new Date(row[0]);
+    var when = stopDate(row[0]);
     if (isNaN(when) || when < today || when > horizon) continue;
     upcoming.push(
       Utilities.formatDate(when, Session.getScriptTimeZone(), 'EEEE, MMM d') +
@@ -300,7 +300,8 @@ function weeklyEmail() {
 
   var subs = tab(ss, SUBS_TAB, SUBS_HEADERS).getDataRange().getValues();
   var body = 'Here\'s where the truck will be this week:\n\n' +
-             upcoming.join('\n') + '\n\nSee you at the window.\n— Bayou Eatz';
+             upcoming.join('\n') + '\n\nSee you at the window.\n— Bayou Eatz' +
+             '\n\nTo stop these emails, reply with the word "unsubscribe".';
 
   for (var j = 1; j < subs.length; j++) {
     if (String(subs[j][2]).toLowerCase() === 'yes') continue;  // unsubscribed
@@ -325,7 +326,7 @@ function tidyOldStops() {
   var values = sheet.getDataRange().getValues();
   var cutoff = new Date(Date.now() - 60 * 24 * 3600 * 1000);
   for (var i = 1; i < values.length; i++) {
-    var when = values[i][0] instanceof Date ? values[i][0] : new Date(values[i][0]);
+    var when = stopDate(values[i][0]);
     if (!isNaN(when) && when < cutoff && String(values[i][6]).toLowerCase() !== 'yes') {
       sheet.getRange(i + 1, 7).setValue('yes');
     }
@@ -337,6 +338,20 @@ function tidyOldStops() {
    ═══════════════════════════════════════════════════════════════════ */
 function creds() {
   return PropertiesService.getScriptProperties().getProperties();
+}
+
+/**
+ * The Date column holds either a real date or the text the website
+ * posts, "2026-09-05". new Date() on that text means midnight UTC,
+ * which in Louisiana is the evening BEFORE — so today's stop would be
+ * read as yesterday's and left out of the weekly email. Read it as a
+ * local calendar day instead.
+ */
+function stopDate(v) {
+  if (v instanceof Date) return v;
+  var m = String(v || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  return new Date(v);
 }
 
 function graph(path) {

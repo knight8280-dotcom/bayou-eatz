@@ -113,7 +113,7 @@ He never types a date format or edits a file.
 1. New Google Sheet with two tabs. **Stops** (the calendar):
    `Date | Type | What | Where | Time | Note | Hide`
    and **Posts** (the written feed):
-   `Posted | Headline | Message | Where | When | Hide`
+   `Posted | Headline | Message | Where | When | Photo | Shared | Hide`
    If you use the Publish button, both tabs are created for you the first
    time something is posted.
 2. **Share → Anyone with the link → Viewer.** The site only ever reads it;
