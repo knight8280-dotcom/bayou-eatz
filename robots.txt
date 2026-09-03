@@ -1,3 +1,7 @@
+# Crawlers only read robots.txt at the root of a host, so on the current
+# github.io/bayou-eatz/ address this file is not consulted at all — the
+# noindex tag on post.html is what actually keeps it out of search.
+# It takes effect once the site has its own domain.
 User-agent: *
 Allow: /
 Disallow: /post.html

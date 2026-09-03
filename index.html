@@ -6,7 +6,7 @@
 
 <!-- ══ EDIT: SEO ══════════════════════════════════════════════════════ -->
 <title>Bayou Eatz — Taste the Bayou</title>
-<meta name="description" content="Bayou Eatz food truck — Bayou Loaded Fries, wings, shrimp & fish baskets, fried ribs and flavored lemonades. See where the truck is parked, check the booking calendar, or book Chef Joe Munson for your event.">
+<meta name="description" content="Bayou Eatz food truck: loaded fries, wings, shrimp and fish baskets, fried ribs and lemonade. See where the truck is today, or book it for your event.">
 <link rel="canonical" href="https://knight8280-dotcom.github.io/bayou-eatz/">
 <meta name="theme-color" content="#170a22">
 <meta property="og:site_name" content="Bayou Eatz">
@@ -49,6 +49,7 @@
   "priceRange": "$$",
   "paymentAccepted": "Cash, Credit Card, Debit Card",
   "hasMenu": "https://knight8280-dotcom.github.io/bayou-eatz/#menu",
+  "address": { "@type": "PostalAddress", "addressLocality": "Baton Rouge", "addressRegion": "LA", "addressCountry": "US" },
   "areaServed": "Baton Rouge & surrounding parishes",
   "founder": { "@type": "Person", "name": "Joe Munson", "jobTitle": "Owner & Executive Chef" },
   "sameAs": [
@@ -57,8 +58,6 @@
   ]
 }
 </script>
-<script type="application/ld+json" data-schema-faq></script>
-<script type="application/ld+json" data-schema-events></script>
 <script>document.documentElement.className += " js";</script>
 </head>
 <body>
@@ -135,8 +134,9 @@
     </a>
 
     <div class="beads" aria-hidden="true"></div>
-    <div class="hero-strip" aria-hidden="true">
-      <div class="hero-strip-track">
+    <div class="hero-strip">
+      <button class="strip-pause" type="button" data-strip-pause aria-pressed="false" aria-label="Pause the scrolling menu">❚❚</button>
+      <div class="hero-strip-track" aria-hidden="true">
         <span>Bayou Loaded Fries</span><span class="fdl"></span><span>Bayou Blaze Shrimp</span><span class="fdl"></span><span>10pc Wings</span><span class="fdl"></span><span>Fried Ribs</span><span class="fdl"></span><span>Patton's Hot Sausage</span><span class="fdl"></span><span>Flavored Lemonade</span><span class="fdl"></span>
         <span>Bayou Loaded Fries</span><span class="fdl"></span><span>Bayou Blaze Shrimp</span><span class="fdl"></span><span>10pc Wings</span><span class="fdl"></span><span>Fried Ribs</span><span class="fdl"></span><span>Patton's Hot Sausage</span><span class="fdl"></span><span>Flavored Lemonade</span><span class="fdl"></span>
       </div>
@@ -314,7 +314,7 @@
               <p class="menu-item-head"><span class="dish">Fried Ribs <span class="qual">w/FF</span></span><span class="dots" aria-hidden="true"></span><span class="price">$18</span></p>
             </li>
             <li class="menu-item">
-              <p class="menu-item-head"><span class="dish">Bayou Blaze Shrimp <span class="qual">w/FF</span> <span class="heat" title="Sweet &amp; spicy">🌶</span></span><span class="dots" aria-hidden="true"></span><span class="price">$18</span></p>
+              <p class="menu-item-head"><span class="dish">Bayou Blaze Shrimp <span class="qual">w/FF</span> <span class="heat"><span aria-hidden="true">🌶</span> Sweet &amp; spicy</span></span><span class="dots" aria-hidden="true"></span><span class="price">$18</span></p>
               <p class="desc">Golden fried shrimp tossed in our house sweet &amp; spicy sauce.</p>
             </li>
             <li class="menu-item">
@@ -346,8 +346,8 @@
             <ul class="flavor-list">
               <li>Lemon Pepper</li>
               <li>BBQ</li>
-              <li>Mango Habanero <span class="heat" title="Hot">🌶</span></li>
-              <li>Buffalo <span class="heat" title="Medium">🌶</span></li>
+              <li>Mango Habanero <span class="heat"><span aria-hidden="true">🌶</span> Hot</span></li>
+              <li>Buffalo <span class="heat"><span aria-hidden="true">🌶</span> Medium</span></li>
               <li>Garlic Parmesan</li>
               <li>Hot Honey</li>
             </ul>
@@ -541,7 +541,7 @@
           <div class="field-row">
             <div class="field">
               <label for="q-date">Event date</label>
-              <input id="q-date" name="date" type="date">
+              <input id="q-date" name="date" type="date" data-min-today>
             </div>
             <div class="field">
               <label for="q-guests">Guest count</label>
@@ -591,27 +591,27 @@
 
       <div class="gallery-rail" data-rail tabindex="0" role="region" aria-label="Food photos, scrollable">
         <figure class="gallery-item">
-          <img data-lightbox src="assets/img/bayou-loaded-fries.jpg" alt="Bayou Loaded Fries topped with shrimp, hot sausage, bacon and Bayou Sauce, served with fried fish" loading="lazy" width="1050" height="1400">
+          <button class="gallery-open" type="button" aria-label="View larger: Bayou Loaded Fries"><img data-lightbox src="assets/img/bayou-loaded-fries.jpg" alt="Bayou Loaded Fries topped with shrimp, hot sausage, bacon and Bayou Sauce, served with fried fish" loading="lazy" width="1050" height="1400"></button>
           <figcaption>Bayou Loaded Fries</figcaption>
         </figure>
         <figure class="gallery-item">
-          <img data-lightbox src="assets/img/fried-ribs.jpg" alt="Fried ribs over seasoned fries with a side of dipping sauce" loading="lazy" width="900" height="1200">
+          <button class="gallery-open" type="button" aria-label="View larger: Fried Ribs w/ FF"><img data-lightbox src="assets/img/fried-ribs.jpg" alt="Fried ribs over seasoned fries with a side of dipping sauce" loading="lazy" width="900" height="1200"></button>
           <figcaption>Fried Ribs w/ FF</figcaption>
         </figure>
         <figure class="gallery-item">
-          <img data-lightbox src="assets/img/chicken-tenders.jpg" alt="Sauced chicken tenders with a basket of steak fries" loading="lazy" width="900" height="1200">
+          <button class="gallery-open" type="button" aria-label="View larger: Tenders &amp; Fries"><img data-lightbox src="assets/img/chicken-tenders.jpg" alt="Sauced chicken tenders with a basket of steak fries" loading="lazy" width="900" height="1200"></button>
           <figcaption>Tenders &amp; Fries</figcaption>
         </figure>
         <figure class="gallery-item">
-          <img data-lightbox src="assets/img/wings-fried-okra.jpg" alt="Wings tossed in sauce with sliced jalapeños alongside fried okra" loading="lazy" width="900" height="1200">
+          <button class="gallery-open" type="button" aria-label="View larger: Wings &amp; Fried Okra"><img data-lightbox src="assets/img/wings-fried-okra.jpg" alt="Wings tossed in sauce with sliced jalapeños alongside fried okra" loading="lazy" width="900" height="1200"></button>
           <figcaption>Wings &amp; Fried Okra</figcaption>
         </figure>
         <figure class="gallery-item">
-          <img data-lightbox src="assets/img/fish-plate.jpg" alt="Fried fish with garlic bread and spaghetti in meat sauce" loading="lazy" width="1050" height="1400">
+          <button class="gallery-open" type="button" aria-label="View larger: Fish Plate"><img data-lightbox src="assets/img/fish-plate.jpg" alt="Fried fish with garlic bread and spaghetti in meat sauce" loading="lazy" width="1050" height="1400"></button>
           <figcaption>Fish Plate</figcaption>
         </figure>
         <figure class="gallery-item">
-          <img data-lightbox src="assets/img/wings-shrimp-fries.jpg" alt="BBQ wings, sauced shrimp and loaded fries laid out in foil" loading="lazy" width="900" height="1200">
+          <button class="gallery-open" type="button" aria-label="View larger: The Full Spread"><img data-lightbox src="assets/img/wings-shrimp-fries.jpg" alt="BBQ wings, sauced shrimp and loaded fries laid out in foil" loading="lazy" width="900" height="1200"></button>
           <figcaption>The Full Spread</figcaption>
         </figure>
       </div>

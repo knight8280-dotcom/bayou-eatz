@@ -216,6 +216,12 @@
 
   var calendarApi = null;
 
+  // Whatever is currently driving the calendar: the live sheet once it has
+  // loaded, the shipped fallback list until then.
+  function currentStops() {
+    return calendarApi ? calendarApi.getStops() : (DATA.bookings || []);
+  }
+
   function initCalendar() {
     var grid = $('[data-cal-grid]');
     if (!grid) return;
@@ -291,7 +297,7 @@
           cell.appendChild(wrap);
         }
 
-        if (inMonth) {
+        if (inMonth && !past) {
           cell.tabIndex = 0;
           cell.setAttribute("role", "button");
           cell.setAttribute("aria-label", dayLabel(d, events) + " — request this date");
@@ -303,6 +309,8 @@
               requestDate(this.dataset.date);
             }
           });
+        } else if (inMonth) {
+          cell.setAttribute("aria-label", dayLabel(d, events) + " — past");
         } else {
           cell.setAttribute("aria-hidden", "true");
         }
@@ -314,8 +322,8 @@
       grid.appendChild(frag);
 
       // Don't let people page back before the current month.
-      prev.disabled = view.getFullYear() === today.getFullYear() &&
-                      view.getMonth() === today.getMonth();
+      prev.setAttribute("aria-disabled", String(
+        view.getFullYear() === today.getFullYear() && view.getMonth() === today.getMonth()));
     }
 
     function renderUpcoming() {
@@ -412,7 +420,10 @@
       render();
     }
 
-    prev.addEventListener("click", function () { shift(-1); });
+    prev.addEventListener("click", function () {
+      if (prev.getAttribute("aria-disabled") === "true") return;
+      shift(-1);
+    });
     next.addEventListener("click", function () { shift(1); });
 
     function paintHero() {
@@ -424,6 +435,8 @@
         heroNext.textContent = e.type === "private"
           ? "Out on a private event"
           : e.title + (e.time ? " · " + e.time : "");
+      } else {
+        heroNext.textContent = "See the calendar";
       }
     }
 
@@ -581,18 +594,21 @@
       // to. Otherwise fall back to emailing the address across.
       var publish = String(DATA.publishUrl || "").trim();
       if (publish) {
-        fetch(publish, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ subscribe: value })
-        }).then(function () {
-          form.reset();
-          status.textContent = "You're on the list. See you at the window.";
-          status.className = "form-status is-ok";
-        }).catch(function () {
-          status.textContent = "That didn't go through — email " + (DATA.email || "us") + " and we'll add you.";
-          status.className = "form-status is-error";
+        // A no-cors POST can't tell us whether the address was recorded,
+        // so this goes as JSONP through doGet, which can answer.
+        jsonp(publish + "?subscribe=" + encodeURIComponent(value), 8000).then(function (res) {
+          if (res && res.ok) {
+            form.reset();
+            status.textContent = res.already
+              ? "You're already on the list."
+              : "Check your inbox — tap the link in our email to confirm.";
+            status.className = "form-status is-ok";
+          } else {
+            status.textContent = (res && res.error === "too many signups right now")
+              ? "We're getting a lot of signups — try again in a minute."
+              : "That didn't go through — email " + (DATA.email || "us") + " and we'll add you.";
+            status.className = "form-status is-error";
+          }
         });
         return;
       }
@@ -645,6 +661,7 @@
         if (DATA.phoneDial) o.telephone = DATA.phoneDial;
         if (DATA.email) o.email = DATA.email;
         if (DATA.serviceArea) o.areaServed = DATA.serviceArea;
+        if (DATA.city) o.address = { "@type": "PostalAddress", addressLocality: DATA.city, addressRegion: DATA.region || "", addressCountry: "US" };
         if (DATA.ownerName) o.founder = { "@type": "Person", name: DATA.ownerName, jobTitle: DATA.ownerTitle || "" };
         o.sameAs = [DATA.facebook, DATA.instagram].filter(Boolean);
         if (base) {
@@ -670,10 +687,24 @@
 
     // Read the FAQ back out of the page so the markup stays the single
     // source — edit a question in index.html and this follows.
-    var faqEl = $('[data-schema-faq]');
+    // Structured-data blocks are created only when there is something to
+    // put in them; an empty <script type="application/ld+json"> is invalid
+    // JSON and gets reported as unparsable.
+    function schemaBlock(name, obj) {
+      var el = $('[data-schema-' + name + ']');
+      if (!obj) { if (el) el.remove(); return; }
+      if (!el) {
+        el = document.createElement("script");
+        el.type = "application/ld+json";
+        el.setAttribute("data-schema-" + name, "");
+        document.head.appendChild(el);
+      }
+      el.textContent = JSON.stringify(obj, null, 2);
+    }
+
     var items = $$('.faq-item');
-    if (faqEl && items.length) {
-      faqEl.textContent = JSON.stringify({
+    if (items.length) {
+      schemaBlock("faq", {
         "@context": "https://schema.org",
         "@type": "FAQPage",
         mainEntity: items.map(function (el) {
@@ -686,31 +717,37 @@
             }
           };
         })
-      }, null, 2);
+      });
     }
 
-    // Only public stops become events — private bookings stay private.
-    var evEl = $('[data-schema-events]');
-    if (evEl) {
-      var today = new Date();
-      today.setHours(0, 0, 0, 0);
-      var events = (DATA.bookings || [])
-        .filter(function (b) { return b.type === "public" && parseDay(b.date) >= today; })
-        .map(function (b) {
-          var e = {
-            "@type": "FoodEvent",
-            name: "Bayou Eatz — " + b.title,
-            startDate: b.date,
-            eventStatus: "https://schema.org/EventScheduled",
-            organizer: { "@type": "Organization", name: "Bayou Eatz", url: base ? base + "/" : undefined }
-          };
-          if (b.place) e.location = { "@type": "Place", name: b.place };
-          return e;
-        });
-      if (events.length) {
-        evEl.textContent = JSON.stringify({ "@context": "https://schema.org", "@graph": events }, null, 2);
-      }
-    }
+    // Only public stops with a place become events — Google requires a
+    // location with an address, and private bookings stay private.
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var events = currentStops()
+      .filter(function (b) { return b.type === "public" && b.place && parseDay(b.date) >= today; })
+      .map(function (b) {
+        return {
+          "@type": "FoodEvent",
+          name: "Bayou Eatz — " + b.title,
+          startDate: b.date,
+          eventStatus: "https://schema.org/EventScheduled",
+          eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+          organizer: { "@type": "Organization", name: "Bayou Eatz", url: base ? base + "/" : undefined },
+          location: {
+            "@type": "Place",
+            name: b.place,
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: b.place,
+              addressLocality: DATA.city || undefined,
+              addressRegion: DATA.region || undefined,
+              addressCountry: "US"
+            }
+          }
+        };
+      });
+    schemaBlock("events", events.length ? { "@context": "https://schema.org", "@graph": events } : null);
   }
 
   /* ── Mobile nav ──────────────────────────────────────────────── */
@@ -798,13 +835,16 @@
         if (!el) {
           el = document.createElement("p");
           el.className = "field-error";
+          el.id = input.id + "-error";
           field.appendChild(el);
         }
         el.textContent = message;
         input.setAttribute("aria-invalid", "true");
+        input.setAttribute("aria-describedby", el.id);
       } else {
         if (el) el.remove();
         input.removeAttribute("aria-invalid");
+        input.removeAttribute("aria-describedby");
       }
     }
 
@@ -855,7 +895,12 @@
       // Honeypot: bots fill hidden fields, people don't.
       if ($('#q-company', form).value) return;
 
-      if (!validate()) { say("Please fix the highlighted fields.", "error"); return; }
+      if (!validate()) {
+        say("Please fix the highlighted fields.", "error");
+        var firstBad = $('[aria-invalid="true"]', form);
+        if (firstBad) firstBad.focus();
+        return;
+      }
 
       var data = {};
       new FormData(form).forEach(function (v, k) { data[k] = v; });
@@ -916,6 +961,30 @@
 
 
 
+  // Load a JSONP endpoint via <script>, resolving with the payload or
+  // null on timeout/error. Used wherever a plain fetch couldn't read the
+  // reply across origins.
+  function jsonp(url, timeoutMs) {
+    return new Promise(function (resolve) {
+      var CB = "__bayouCb" + Date.now() + Math.floor(Math.random() * 1e6);
+      var s = document.createElement("script");
+      var done = false;
+      var t = setTimeout(function () { finish(null); }, timeoutMs || 6000);
+      function finish(v) {
+        if (done) return;
+        done = true;
+        clearTimeout(t);
+        try { delete window[CB]; } catch (e) { window[CB] = undefined; }
+        if (s.parentNode) s.parentNode.removeChild(s);
+        resolve(v);
+      }
+      window[CB] = finish;
+      s.src = url + (url.indexOf("?") === -1 ? "?" : "&") + "callback=" + CB;
+      s.onerror = function () { finish(null); };
+      document.head.appendChild(s);
+    });
+  }
+
   /* ── Live stops from Chef Joe's sheet ────────────────────────────
      A truck moves; a hard-coded schedule goes stale the day it ships.
      The sheet is loaded through Google's JSONP endpoint via a <script>
@@ -968,7 +1037,9 @@
   // column is formatted. Accept both so Joe doesn't have to care.
   function cellDate(cell) {
     if (!cell) return "";
-    var v = cell.f || cell.v;
+    // cell.v carries the canonical "Date(y,m,d)" for real date cells; the
+    // formatted cell.f follows the sheet's locale and can flip day/month.
+    var v = cell.v != null ? cell.v : cell.f;
     if (v == null) return "";
     v = String(v).trim();
 
@@ -1159,13 +1230,13 @@
   // "just now" / "2 hours ago" reads as live; a bare date reads as stale.
   function agoText(ms) {
     if (!ms) return "";
-    var diff = Date.now() - ms;
-    var mins = Math.round(diff / 60000);
+    var diff = Math.max(0, Date.now() - ms);
+    var mins = Math.floor(diff / 60000);
     if (mins < 1) return "just now";
     if (mins < 60) return mins + (mins === 1 ? " minute ago" : " minutes ago");
-    var hrs = Math.round(mins / 60);
+    var hrs = Math.floor(diff / 3600000);
     if (hrs < 24) return hrs + (hrs === 1 ? " hour ago" : " hours ago");
-    var days = Math.round(hrs / 24);
+    var days = Math.floor(diff / 86400000);
     if (days < 7) return days + (days === 1 ? " day ago" : " days ago");
     var d = new Date(ms);
     return MONTHS[d.getMonth()] + " " + d.getDate();
@@ -1269,7 +1340,8 @@
     today.setHours(0, 0, 0, 0);
     var iso = key(today);
 
-    var todays = (DATA.bookings || []).filter(function (b) { return b.date === iso; });
+    pill.classList.remove("is-open", "is-booked");
+    var todays = currentStops().filter(function (b) { return b.date === iso; });
     if (todays.length) {
       var ev = todays[0];
       if (ev.type === "private") {
@@ -1302,7 +1374,7 @@
     for (var i = 1; i <= 7; i++) {
       var d = new Date(from.getFullYear(), from.getMonth(), from.getDate() + i);
 
-      var booked = (DATA.bookings || []).filter(function (b) {
+      var booked = currentStops().filter(function (b) {
         return b.date === key(d) && b.type === "public";
       })[0];
       if (booked) {
@@ -1339,7 +1411,8 @@
     }
 
     images.forEach(function (el, i) {
-      el.addEventListener("click", function () { show(i); dialog.showModal(); });
+      var trigger = el.closest("button") || el;
+      trigger.addEventListener("click", function () { show(i); dialog.showModal(); });
     });
 
     $('[data-lightbox-next]', dialog).addEventListener("click", function () { show(index + 1); });
@@ -1412,8 +1485,8 @@
     // At the far end the remaining slides can't reach the left edge, so
     // position alone would stall the counter a few short of the last
     // photo and light the wrong dot. Treat max scroll as "on the last".
-    function activeIndex() {
-      if (rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 2) {
+    function activeIndex(byPosition) {
+      if (!byPosition && rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 2) {
         return items.length - 1;
       }
       var best = 0, bestDist = Infinity;
@@ -1428,16 +1501,24 @@
       var i = activeIndex();
       if (cur) cur.textContent = String(i + 1);
       buttons.forEach(function (b, n) { b.classList.toggle("is-active", n === i); });
-      if (prev) prev.disabled = rail.scrollLeft <= 2;
-      if (next) next.disabled = rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 2;
+      if (prev) prev.setAttribute("aria-disabled", String(rail.scrollLeft <= 2));
+      if (next) next.setAttribute("aria-disabled", String(rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 2));
     }
 
-    if (prev) prev.addEventListener("click", function () { scrollToItem(activeIndex() - 1); });
-    if (next) next.addEventListener("click", function () { scrollToItem(activeIndex() + 1); });
+    // Backwards steps from the slide actually at the left edge; the "on
+    // the last" override is only for the counter and dots.
+    if (prev) prev.addEventListener("click", function () {
+      if (prev.getAttribute("aria-disabled") === "true") return;
+      scrollToItem(activeIndex(true) - 1);
+    });
+    if (next) next.addEventListener("click", function () {
+      if (next.getAttribute("aria-disabled") === "true") return;
+      scrollToItem(activeIndex() + 1);
+    });
 
     rail.addEventListener("keydown", function (e) {
       if (e.key === "ArrowRight") { e.preventDefault(); scrollToItem(activeIndex() + 1); }
-      if (e.key === "ArrowLeft")  { e.preventDefault(); scrollToItem(activeIndex() - 1); }
+      if (e.key === "ArrowLeft")  { e.preventDefault(); scrollToItem(activeIndex(true) - 1); }
       if (e.key === "Home")       { e.preventDefault(); scrollToItem(0); }
       if (e.key === "End")        { e.preventDefault(); scrollToItem(items.length - 1); }
     });
@@ -1488,7 +1569,10 @@
     if (phoneBtn && DATA.phoneDial) phoneBtn.setAttribute("href", "tel:" + DATA.phoneDial);
 
     var hero = $('.hero');
-    var trigger = hero ? hero.offsetHeight * 0.6 : 400;
+    // Show it once the hero's own buttons have scrolled off, which on a
+    // phone is well before 60% of the hero's height.
+    var actions = $('.hero-actions');
+    var trigger = actions ? actions.offsetTop + actions.offsetHeight : (hero ? hero.offsetHeight * 0.4 : 400);
     var ticking = false;
     function update() {
       bar.classList.toggle("is-visible", window.scrollY > trigger);
@@ -1517,6 +1601,24 @@
   }
 
   /* ── Misc ────────────────────────────────────────────────────── */
+  function initMinDate() {
+    var d = new Date();
+    var iso = key(d);
+    $$('[data-min-today]').forEach(function (el) { el.min = iso; });
+  }
+
+  function initStripPause() {
+    var btn = $('[data-strip-pause]');
+    var strip = btn && btn.closest(".hero-strip");
+    if (!btn || !strip) return;
+    btn.addEventListener("click", function () {
+      var paused = strip.classList.toggle("is-paused");
+      btn.setAttribute("aria-pressed", String(paused));
+      btn.setAttribute("aria-label", paused ? "Resume the scrolling menu" : "Pause the scrolling menu");
+      btn.textContent = paused ? "▶" : "❚❚";
+    });
+  }
+
   function initYear() {
     var el = $('[data-year]');
     if (el) el.textContent = String(new Date().getFullYear());
@@ -1542,6 +1644,8 @@
   initScrollSpy();
   initActionBar();
   initMenuJumps();
+  initMinDate();
+  initStripPause();
   initYear();
   loadLiveStops();
   loadPosts();

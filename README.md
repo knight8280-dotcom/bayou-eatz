@@ -67,8 +67,13 @@ the address it gives you into `publishUrl` in `site-data.js`.
 
 The script runs as the sheet's owner, so **the website never holds a Google
 password or an API key** — only the web-app address and a passcode he types.
-Anyone who found the address still couldn't post without the passcode, and the
-worst they could do is add a row you delete.
+
+**Treat the passcode like a password, because it is one.** The endpoint's
+address is public (it's in this repo), and once the socials are connected a
+correct passcode posts to the Facebook page and Instagram *as the business*.
+So the script insists the passcode be at least twelve characters and refuses
+to run on the default, and it locks publishing for fifteen minutes after five
+wrong guesses. A sentence Joe will remember is ideal.
 
 Because Google's reply to that request can't be read reliably from a browser,
 the page doesn't just claim success — it re-reads the sheet until the post
@@ -110,12 +115,13 @@ He never types a date format or edits a file.
 **Setting up the sheet — once, about five minutes.** Full walkthrough is on
 `/post.html` itself, but in short:
 
-1. New Google Sheet with two tabs. **Stops** (the calendar):
+1. New Google Sheet with one tab named **Stops** (the calendar):
    `Date | Type | What | Where | Time | Note | Hide`
-   and **Posts** (the written feed):
-   `Posted | Headline | Message | Where | When | Hide`
-   If you use the Publish button, both tabs are created for you the first
-   time something is posted.
+   The **Posts** tab (the written feed) is created for you the first time
+   something is published. If you'd rather make it by hand, its headers are
+   `Posted | Headline | Message | Where | When | Photo | Shared | Hide` — and
+   if you get them wrong or short, the script adds the missing ones rather
+   than writing rows into the wrong columns.
 2. **Share → Anyone with the link → Viewer.** The site only ever reads it;
    nobody else can change it.
 3. Copy the long ID out of the sheet's address and paste it into
@@ -141,16 +147,21 @@ All are optional and all are set up from the Apps Script editor.
 | `tidyOldStops` | Hides stops older than 60 days so the sheet stays readable | Triggers → daily, or run by hand |
 | `testConnections` | Checks the Facebook and Instagram tokens still work | Run it from the editor whenever posts stop appearing |
 
-**The mailing list now works properly.** Signups used to email Chef Joe one
-address at a time, which is not a list anybody can send to — the site promised
-subscribers "the week's stops" and had no way to keep it. With the script
-installed, signups land in a **Subscribers** tab and `weeklyEmail` sends to
-them. Without it, the old email-forwarding behaviour still applies.
+**The mailing list is a real list, kept where it belongs.** Signups go into a
+**separate, private spreadsheet** the script creates in Joe's Drive — not the
+schedule sheet, which has to be shared publicly for the website to read it.
+Putting customers' addresses in that file would publish them.
 
-Note that Gmail caps sending at roughly 100 messages a day on a free account,
-1,500 on Workspace. `weeklyEmail` stops cleanly and logs where it got to
-rather than half-sending, but a list bigger than that needs a real mailing
-service.
+It's **double opt-in**: signing up sends a confirmation email, and nothing is
+mailed until the link is clicked, so nobody can enrol someone else. **Every
+email carries a working unsubscribe link.** The site tells a new subscriber to
+check their inbox rather than claiming they're on the list already.
+
+Gmail caps sending at roughly 100 messages a day on a free account, 1,500 on
+Workspace. `weeklyEmail` checks the remaining quota before each send; if it
+runs out it remembers the row it stopped at and carries on from there next
+time, so nobody is skipped every week. A list much bigger than the cap needs a
+real mailing service.
 
 ### 3. The fallback booking list — `assets/js/site-data.js`
 
@@ -376,6 +387,14 @@ fill `hours` in and the footer and search data both pick it up automatically.
   and a counter. Scrolling is the browser's own, so swipe, trackpad and
   arrow keys all work; tapping a photo still opens the lightbox.
 - `/post.html` is `noindex, nofollow` and isn't linked from anywhere on the
-  site. It's not a secret — anyone who guesses the address can open it — but
-  it only ever writes text into boxes on screen. It has no power to change the
-  site on its own, so there's nothing there to abuse.
+  site. It's not a secret — anyone who guesses the address can open it. On its
+  own it only writes text into boxes; with `publishUrl` set, its Publish
+  button can post to the site and socials, which is exactly why the passcode
+  has to be strong (see above). Ticking "remember the passcode" keeps it in
+  the browser's storage for that site on that phone.
+- `robots.txt` only takes effect at the root of a domain. On the current
+  `github.io/bayou-eatz/` address it isn't read; the `noindex` tag on
+  post.html is what does the work. It becomes live with a custom domain.
+- `404.html` carries `<base href="/bayou-eatz/">` because GitHub Pages serves
+  it at whatever missing path was requested. Change that line along with the
+  domain.

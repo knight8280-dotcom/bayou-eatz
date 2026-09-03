@@ -278,8 +278,18 @@
     publishNote.className = "out-note" + (kind ? " is-" + kind : "");
   }
 
-  // Ask the sheet whether the post arrived. Returns a promise for the
-  // most recent headline it can see.
+  // gviz hands timestamps back as "Date(2026,7,15,18,4,0)".
+  function stamp(cell) {
+    if (!cell) return 0;
+    var v = cell.v == null ? cell.f : cell.v;
+    var g = String(v == null ? "" : v).match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?/);
+    if (g) return new Date(+g[1], +g[2], +g[3], +(g[4] || 0), +(g[5] || 0), +(g[6] || 0)).getTime();
+    var d = new Date(String(v));
+    return isNaN(d) ? 0 : d.getTime();
+  }
+
+  // Ask the sheet what its newest post is. Returns a promise for that
+  // row's headline, timestamp, share status and the row count.
   function latestPosted() {
     return new Promise(function (resolve) {
       var cfg = DATA.stopsSheet || {};
@@ -306,6 +316,7 @@
           var iHead = heads.indexOf("headline");
           var iShared = heads.indexOf("shared");
           // Rows arrive in append order, so the last one is the newest.
+          var iPosted = heads.indexOf("posted");
           for (var n = rows.length - 1; n >= 0; n--) {
             var c = rows[n] && rows[n].c;
             if (!c) continue;
@@ -313,6 +324,8 @@
             if (head == null) continue;
             out = {
               headline: String(head).trim(),
+              count: rows.length,
+              posted: iPosted >= 0 ? stamp(c[iPosted]) : 0,
               shared: iShared >= 0 && c[iShared]
                 ? String(c[iShared].f != null ? c[iShared].f : c[iShared].v).trim()
                 : ""
@@ -375,9 +388,15 @@
       publishBtn.disabled = true;
       say("Publishing…");
 
+      // Snapshot the sheet first so the confirmation can insist on a row
+      // that is genuinely newer than anything already there. Without this
+      // a headline he uses every week would "confirm" a rejected post.
+      var before = null;
+      var snapshot = latestPosted().then(function (b) { before = b; });
+
       // text/plain keeps this a "simple" request, so the browser doesn't
       // preflight it — Apps Script can't answer a preflight.
-      fetch(publishUrl(), {
+      snapshot.then(function () { return fetch(publishUrl(), {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -394,7 +413,7 @@
           // the preview is word-for-word what goes out.
           caption:  socialFor(v)
         })
-      })
+      }); })
       .then(function () {
         // Give the sheet a moment, then check it really landed.
         say("Sent — checking it went through…");
@@ -403,7 +422,12 @@
           tries++;
           setTimeout(function () {
             latestPosted().then(function (found) {
-              if (found && found.headline === v.what) {
+              var isNew = found && found.headline === v.what && (
+                !before ||
+                found.count > before.count ||
+                (found.posted && found.posted > (before.posted || 0))
+              );
+              if (isNew) {
                 say(shareMessage(found.shared), shareKind(found.shared));
                 publishBtn.disabled = false;
                 return;
