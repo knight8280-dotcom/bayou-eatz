@@ -1043,8 +1043,10 @@
       finish(rows);
     };
 
+    // headers=1 makes row 1 the column labels no matter what the cells
+    // below it hold, so columns can be matched by name every time.
     script.src = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(id) +
-                 "/gviz/tq?tqx=out:json;responseHandler:" + CB +
+                 "/gviz/tq?tqx=out:json;responseHandler:" + CB + "&headers=1" +
                  "&sheet=" + encodeURIComponent(cfg.sheetName || "Stops");
     script.onerror = function () { finish(null); };
     document.head.appendChild(script);
@@ -1098,6 +1100,10 @@
       }
       return -1;
     }
+    // Google serves the FIRST tab for any tab name it can't find, so a
+    // table with no Date column is some other tab, not the schedule.
+    if (heads.indexOf("date") === -1) return [];
+
     var iDate = col("date", "when", "a");
     var iType = col("type", "b");
     var iWhat = col("what", "event", "title", "c");
@@ -1177,7 +1183,7 @@
     };
 
     script.src = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(id) +
-                 "/gviz/tq?tqx=out:json;responseHandler:" + CB +
+                 "/gviz/tq?tqx=out:json;responseHandler:" + CB + "&headers=1" +
                  "&sheet=" + encodeURIComponent(cfg.postsName || "Posts");
     script.onerror = function () { finish(null); };
     document.head.appendChild(script);
@@ -1198,6 +1204,11 @@
       }
       return -1;
     }
+    // Until the first post exists there is no Posts tab, and Google
+    // answers with the first tab instead — the schedule. Without its own
+    // headers this isn't the feed, and a stop must never render as a post.
+    if (heads.indexOf("headline") === -1 && heads.indexOf("posted") === -1) return [];
+
     var iWhen  = col("posted", "timestamp", "date", "a");
     var iHead  = col("headline", "title", "b");
     var iBody  = col("message", "post", "body", "text", "c");

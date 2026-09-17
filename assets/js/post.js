@@ -337,8 +337,10 @@
         resolve(out);
       };
 
+      // headers=1: row 1 is always the labels, so "headline" is found by
+      // name — and not found at all if Google served some other tab.
       s.src = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(id) +
-              "/gviz/tq?tqx=out:json;responseHandler:" + CB +
+              "/gviz/tq?tqx=out:json;responseHandler:" + CB + "&headers=1" +
               "&sheet=" + encodeURIComponent(cfg.postsName || "Posts") +
               "&_=" + Date.now();
       s.onerror = function () { cleanup(); resolve(null); };

@@ -27,10 +27,10 @@ The design and menu are done, the site is deployed, and the schedule sheet
 exists. What remains is a short list of things only the owner of the inbox,
 the Google account or the business can do, in this order:
 
-1. **Share the schedule sheet** so the site can read it — open
+1. **Name the schedule sheet's tab `Stops`** — open
    [Bayou Eatz — Schedule](https://docs.google.com/spreadsheets/d/1fScbuffRZN9tZluynheTuodQDSdpXTe0J-xBlJQLRmY/edit)
-   → Share → General access → **Anyone with the link** → Viewer. Its ID is
-   already in `site-data.js`. (See §2.)
+   and double-tap the tab called "Untitled" at the bottom. It's already
+   shared "Anyone with the link" and its ID is in `site-data.js`. (See §2.)
 2. **Activate the booking form** — send one test request through the live
    site, then click the link in the email formsubmit.co sends to
    `bayoueatz@outlook.com`. Until then requests aren't forwarded. (See
@@ -132,18 +132,22 @@ phone and add it to the home screen; it behaves like an app.
 
 He never types a date format or edits a file.
 
-**The sheet is already made.** It's called **Bayou Eatz — Schedule**, it
-lives in the Google Drive of the account that built this site, its **Stops**
-tab carries the seven headers, and its ID is in `stopsSheet.sheetId`:
+**The sheet is already made and shared.** It's called **Bayou Eatz —
+Schedule**, it lives in the Google Drive of the account that built this
+site, its first tab carries the seven headers, and its ID is in
+`stopsSheet.sheetId`:
 
 https://docs.google.com/spreadsheets/d/1fScbuffRZN9tZluynheTuodQDSdpXTe0J-xBlJQLRmY/edit
 
-One step is left, and only the sheet's owner can do it: **Share → General
-access → Anyone with the link → Viewer.** The site only ever reads it; nobody
-else can change it. Until that's done the calendar quietly uses the
-`bookings` list in `site-data.js` instead. If Chef Joe should own the sheet
-himself, share it with his Google account as an editor (or transfer
-ownership from the Share dialog) — nothing on the site changes.
+**Make sure that tab is named `Stops`.** Google names an imported file's
+only tab "Untitled"; double-tap the tab name at the bottom to rename it. The
+site asks Google for a tab by name, and for a name it can't find Google
+quietly hands back the first tab — which happens to be right while there is
+only one tab, and stops being right the moment a second one exists. The
+publishing script renames a matching tab itself the first time it runs, so
+this sorts itself out either way. If Chef Joe should own the sheet himself,
+share it with his Google account as an editor (or transfer ownership from
+the Share dialog) — nothing on the site changes.
 
 The **Posts** tab (the written feed) is created the first time something is
 published. To make it by hand, its headers are
@@ -417,6 +421,11 @@ fill `hours` in and the footer and search data both pick it up automatically.
 - The **Latest word** feed and its nav link stay hidden until there's a real
   post, so a quiet week never leaves an empty section on the page. The
   **Where we tend to be** section does the same until `schedule` has entries.
+- Google's sheet endpoint serves the *first* tab for any tab name it can't
+  find, so each loader checks the headers it gets back: no `Date` column
+  means it isn't the schedule, no `Headline`/`Posted` means it isn't the
+  feed, and either way nothing is shown. Without that, a stop would render
+  as a post until the Posts tab existed.
 - The booking and signup forms read formsubmit's reply rather than trusting
   the status code: a request the service won't deliver (the inbox hasn't
   activated yet) is answered `200` with `success: "false"`, and the site

@@ -568,9 +568,14 @@ function appendByHeader(sheet, obj) {
  * Get a tab, creating it with headers if missing — and if it exists but
  * is short of headers (made by hand from an older instruction sheet),
  * add the missing ones on the end rather than misaligning every row.
+ *
+ * A tab that carries these headers under another name is this tab:
+ * Google calls an imported file's only tab "Untitled", and the website
+ * reads tabs by name. It gets renamed rather than duplicated, so rows
+ * already typed into it are never stranded in a tab nothing reads.
  */
 function tab(ss, name, headers) {
-  var sheet = ss.getSheetByName(name);
+  var sheet = ss.getSheetByName(name) || adoptTab(ss, name, headers);
   if (!sheet) {
     sheet = ss.insertSheet(name);
     sheet.appendRow(headers);
@@ -584,6 +589,19 @@ function tab(ss, name, headers) {
     sheet.getRange(1, start, 1, missing.length).setValues([missing]);
   }
   return sheet;
+}
+
+/** The tab whose first two headers match, renamed to what the site expects. */
+function adoptTab(ss, name, headers) {
+  var want = headers.slice(0, 2).map(function (h) { return h.toLowerCase(); });
+  var found = ss.getSheets().filter(function (s) {
+    var have = columns(s);
+    return want.every(function (h) { return have[h] != null; });
+  })[0];
+  if (!found) return null;
+  Logger.log('Renamed tab "' + found.getName() + '" to "' + name + '"');
+  found.setName(name);
+  return found;
 }
 
 function graph(path) {
