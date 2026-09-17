@@ -23,9 +23,29 @@ site.webmanifest           "add to home screen" on phones
 
 ## Before this goes live
 
-The design and menu are done. These items are placeholders and need real
-values — everything is either in `assets/js/site-data.js` or marked in
-`index.html` with an `EDIT:` comment.
+The design and menu are done, the site is deployed, and the schedule sheet
+exists. What remains is a short list of things only the owner of the inbox,
+the Google account or the business can do, in this order:
+
+1. **Share the schedule sheet** so the site can read it — open
+   [Bayou Eatz — Schedule](https://docs.google.com/spreadsheets/d/1fScbuffRZN9tZluynheTuodQDSdpXTe0J-xBlJQLRmY/edit)
+   → Share → General access → **Anyone with the link** → Viewer. Its ID is
+   already in `site-data.js`. (See §2.)
+2. **Activate the booking form** — send one test request through the live
+   site, then click the link in the email formsubmit.co sends to
+   `bayoueatz@outlook.com`. Until then requests aren't forwarded. (See
+   *Where booking requests go*.)
+3. **Turn on Publish** — paste `tools/apps-script.gs` into the sheet's
+   Apps Script editor, set a passcode, deploy it as a web app and put the
+   `/exec` address in `publishUrl`. Five minutes; the file walks through it.
+4. **Confirm the guessed facts** — service area, the FAQ figures and the
+   catering copy marked `EDIT:` in `index.html`. (See §1 and §7.)
+5. **Optional** — an online-ordering link (`orderUrl`), Chef Joe's real
+   weekly rounds (`schedule`), real reviews, and the Facebook/Instagram
+   auto-posting in `tools/SOCIAL-SETUP.md`.
+
+Everything is either in `assets/js/site-data.js` or marked in `index.html`
+with an `EDIT:` comment.
 
 ### 1. Contact + ordering — `assets/js/site-data.js`
 
@@ -40,7 +60,7 @@ values — everything is either in `assets/js/site-data.js` or marked in
 | `siteUrl` | https://bayoueatz.com | ⬜ set to the real domain before launch |
 | `serviceArea` / `city` / `region` | Baton Rouge & surrounding parishes | ⚠️ **guessed from the 225 area code — confirm** |
 | `hours` | empty | ✅ intentional — see below |
-| `stopsSheet.sheetId` | empty | ⬜ **the important one** — see §2 |
+| `stopsSheet.sheetId` | set — the sheet exists | ⚠️ **share it "Anyone with the link"** — see §2 |
 | `publishUrl` | empty | ⬜ optional — turns on the Publish button, see §2 |
 
 These values populate every phone number, email, social link and Order button
@@ -112,23 +132,31 @@ phone and add it to the home screen; it behaves like an app.
 
 He never types a date format or edits a file.
 
-**Setting up the sheet — once, about five minutes.** Full walkthrough is on
-`/post.html` itself, but in short:
+**The sheet is already made.** It's called **Bayou Eatz — Schedule**, it
+lives in the Google Drive of the account that built this site, its **Stops**
+tab carries the seven headers, and its ID is in `stopsSheet.sheetId`:
 
-1. New Google Sheet with one tab named **Stops** (the calendar):
-   `Date | Type | What | Where | Time | Note | Hide`
-   The **Posts** tab (the written feed) is created for you the first time
-   something is published. If you'd rather make it by hand, its headers are
-   `Posted | Headline | Message | Where | When | Photo | Shared | Hide` — and
-   if you get them wrong or short, the script adds the missing ones rather
-   than writing rows into the wrong columns.
-2. **Share → Anyone with the link → Viewer.** The site only ever reads it;
-   nobody else can change it.
-3. Copy the long ID out of the sheet's address and paste it into
-   `stopsSheet.sheetId` in `site-data.js`. The posting page prints the exact
-   line to save.
+https://docs.google.com/spreadsheets/d/1fScbuffRZN9tZluynheTuodQDSdpXTe0J-xBlJQLRmY/edit
 
-After that: add a row → it's on the site. Delete a row → it's gone. Put `yes`
+One step is left, and only the sheet's owner can do it: **Share → General
+access → Anyone with the link → Viewer.** The site only ever reads it; nobody
+else can change it. Until that's done the calendar quietly uses the
+`bookings` list in `site-data.js` instead. If Chef Joe should own the sheet
+himself, share it with his Google account as an editor (or transfer
+ownership from the Share dialog) — nothing on the site changes.
+
+The **Posts** tab (the written feed) is created the first time something is
+published. To make it by hand, its headers are
+`Posted | Headline | Message | Where | When | Photo | Shared | Hide` — and if
+they come out wrong or short, the script adds the missing ones rather than
+writing rows into the wrong columns.
+
+To use a different sheet instead: new Google Sheet, one tab named **Stops**
+with `Date | Type | What | Where | Time | Note | Hide` in row 1, shared the
+same way, and its ID pasted into `stopsSheet.sheetId`. `/post.html` prints
+the exact line to save.
+
+Day to day: add a row → it's on the site. Delete a row → it's gone. Put `yes`
 in the **Hide** column to pull a stop down without losing the record.
 
 The sheet is read through Google's JSONP endpoint, so there's no API key, no
@@ -179,9 +207,10 @@ per committed date; anything not listed shows as **open for booking**.
 ```
 
 Today's date is highlighted, past days are dimmed, and customers can't page
-back before the current month. **The entries in the file right now are
-examples.** Once the sheet is connected, this list is only a safety net — but
-it's worth leaving a few real stops in it so the page is never bare.
+back before the current month. **The list ships empty** — the example dates
+that used to be here were invented, and a customer can't tell an example from
+a stop. With the sheet connected this list is only a safety net; put a few
+real dates in it if you'd like the page never to be bare when Google is slow.
 
 ### 4. Weekly route — `assets/js/site-data.js`
 
@@ -201,6 +230,12 @@ deliberately secondary to the posted stops. Each entry:
 
 Whichever entry matches today's `day` gets highlighted with a **Today** badge.
 Update it whenever the route changes.
+
+**It ships empty, and the whole section stays hidden until it has entries.**
+The route that used to be in the file was a placeholder — made-up corners
+and a made-up brewery — and a visitor would have driven to them. Fill it in
+from Chef Joe's real rounds, or leave it empty and let the posted stops do
+the talking.
 
 ### 5. Photos on the menu — check the pairings
 
@@ -380,7 +415,13 @@ fill `hours` in and the footer and search data both pick it up automatically.
   everything except Instagram. The site never claims a post went somewhere it
   didn't.
 - The **Latest word** feed and its nav link stay hidden until there's a real
-  post, so a quiet week never leaves an empty section on the page.
+  post, so a quiet week never leaves an empty section on the page. The
+  **Where we tend to be** section does the same until `schedule` has entries.
+- The booking and signup forms read formsubmit's reply rather than trusting
+  the status code: a request the service won't deliver (the inbox hasn't
+  activated yet) is answered `200` with `success: "false"`, and the site
+  treats that as a failure and hands the customer's typing to their email
+  app instead of claiming it was sent.
 - Private bookings never publish their venue — not to the feed, not to the
   calendar, not to the search data.
 - The gallery is a horizontal rail with a label on every photo, arrows, dots

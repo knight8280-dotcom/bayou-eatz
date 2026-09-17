@@ -74,13 +74,18 @@ window.BAYOU = {
      Chef Joe keeps a Google Sheet on his phone. Add a row, and the
      website shows it — no code, no commit, no waiting on anybody.
 
-     Setup, once:
-       1. Make a Google Sheet with these seven headers in row 1:
+     The sheet already exists — "Bayou Eatz — Schedule" in Google Drive,
+     with the Stops tab and its seven headers in place:
+       https://docs.google.com/spreadsheets/d/1fScbuffRZN9tZluynheTuodQDSdpXTe0J-xBlJQLRmY/edit
+
+     One thing left before the site can read it:
+       Share → General access → "Anyone with the link" → Viewer.
+
+     To use a different sheet instead, make one with these headers in
+     row 1 of a tab named Stops:
             Date | Type | What | Where | Time | Note | Hide
-       2. Share → General access → "Anyone with the link" → Viewer.
-       3. Copy the long ID out of the sheet's address bar:
-            docs.google.com/spreadsheets/d/THIS-LONG-BIT/edit
-       4. Paste it as sheetId below. Done.
+     share it the same way, and paste the long ID out of its address
+     (docs.google.com/spreadsheets/d/THIS-LONG-BIT/edit) as sheetId.
 
      The /post.html page on this site writes the rows for him, so he
      never has to remember the format.
@@ -90,7 +95,7 @@ window.BAYOU = {
      calendar.
      ══════════════════════════════════════════════════════════════════ */
   stopsSheet: {
-    sheetId:   "",          /* ← paste the sheet ID here to go live */
+    sheetId:   "1fScbuffRZN9tZluynheTuodQDSdpXTe0J-xBlJQLRmY",
     sheetName: "Stops",     /* the tab holding calendar stops */
     postsName: "Posts",     /* the tab holding written updates */
     timeoutMs: 6000
@@ -113,17 +118,18 @@ window.BAYOU = {
      ══════════════════════════════════════════════════════════════════ */
   publishUrl: "",
 
-  /* ── Weekly route ─────────────────────────────────────────────────
-     The "typical week" list. day: Sunday = 0 … Saturday = 6.        */
-  schedule: [
-    { day: 2, label: "Tuesday",   place: "Downtown Lunch Stop", address: "Main St & 3rd Ave",              time: "11am – 3pm",  open: true },
-    { day: 3, label: "Wednesday", place: "Business Park",       address: "Corporate Center lot",           time: "11am – 3pm",  open: true },
-    { day: 4, label: "Thursday",  place: "Brewery Night",       address: "Local Brewing Co.",              time: "5pm – 9pm",   open: true },
-    { day: 5, label: "Friday",    place: "Weekend Kickoff",     address: "Riverfront lot",                 time: "11am – 10pm", open: true },
-    { day: 6, label: "Saturday",  place: "Market & Events",     address: "Check Facebook for the spot",    time: "12pm – 10pm", open: true },
-    { day: 0, label: "Sunday",    place: "Private events only",  address: "Book us for your gathering",     time: "Closed",      open: false },
-    { day: 1, label: "Monday",    place: "Closed — prep day",    address: "Back Tuesday",                   time: "Closed",      open: false }
-  ],
+  /* ── Weekly route — OPTIONAL ──────────────────────────────────────
+     The "typical week" list for the "Where we tend to be" section.
+     EMPTY ON PURPOSE until Chef Joe gives his real rounds — the section
+     stays hidden while this is empty, so the site never shows a stop
+     that was made up. One entry per day; day: Sunday = 0 … Saturday = 6.
+
+       { day: 4, label: "Thursday", place: "Brewery Night",
+         address: "Local Brewing Co.", time: "5pm – 9pm", open: true },
+       { day: 1, label: "Monday",   place: "Closed — prep day",
+         address: "Back Tuesday",     time: "Closed",     open: false }
+                                                                     */
+  schedule: [],
 
   /* ══════════════════════════════════════════════════════════════════
      BOOKING CALENDAR
@@ -139,7 +145,15 @@ window.BAYOU = {
        place where it is — customers see this for public stops.
              Leave it off private bookings if the host wants privacy.
 
-     The entries below are EXAMPLES. Replace them with real dates.
+     This list is the FALLBACK — the calendar reads the Google Sheet
+     first and only uses these entries if the sheet can't be reached.
+     It ships empty so nothing invented ever reaches a customer; add a
+     few real dates here if you'd like the page never to be bare:
+
+       { date: "2026-10-03", type: "public",  title: "Saturday Market",
+         time: "12pm – 8pm", place: "Riverfront lot" },
+       { date: "2026-10-10", type: "private", title: "Private event",
+         time: "Booked" }
      ══════════════════════════════════════════════════════════════════ */
   /* ══════════════════════════════════════════════════════════════════
      REVIEWS
@@ -157,16 +171,5 @@ window.BAYOU = {
      ══════════════════════════════════════════════════════════════════ */
   reviews: [],
 
-  bookings: [
-    { date: "2026-08-11", type: "public",  title: "Downtown Lunch",   time: "11am – 3pm",  place: "Main St & 3rd Ave" },
-    { date: "2026-08-13", type: "public",  title: "Brewery Night",    time: "5pm – 9pm",   place: "Local Brewing Co." },
-    { date: "2026-08-14", type: "private", title: "Private event",    time: "Booked" },
-    { date: "2026-08-15", type: "public",  title: "Saturday Market",  time: "12pm – 8pm",  place: "Riverfront lot" },
-    { date: "2026-08-16", type: "private", title: "Church function",  time: "Booked" },
-    { date: "2026-08-21", type: "private", title: "Company lunch",    time: "Booked" },
-    { date: "2026-08-22", type: "public",  title: "Block party",      time: "12pm – 9pm",  place: "Check Facebook for the spot" },
-    { date: "2026-08-29", type: "private", title: "Wedding",          time: "Booked" },
-    { date: "2026-09-05", type: "public",  title: "Saturday Market",  time: "12pm – 8pm",  place: "Riverfront lot" },
-    { date: "2026-09-12", type: "private", title: "Graduation party", time: "Booked" }
-  ]
+  bookings: []
 };

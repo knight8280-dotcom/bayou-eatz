@@ -78,10 +78,14 @@
     if (!list) return;
 
     var rows = DATA.schedule || [];
+    var section = list.closest("section");
     if (!rows.length) {
-      list.innerHTML = '<li class="schedule-empty">Schedule coming soon — check our Facebook for this week\'s stops.</li>';
+      // Nothing entered yet: the posted stops are the real answer, so
+      // the section goes away rather than promising a schedule "soon".
+      if (section) section.hidden = true;
       return;
     }
+    if (section) section.hidden = false;
 
     var today = new Date().getDay();
     var frag = document.createDocumentFragment();
@@ -147,6 +151,20 @@
       return "https://formsubmit.co/ajax/" + encodeURIComponent(DATA.email);
     }
     return "";
+  }
+
+  // formsubmit answers a request it won't deliver — the inbox hasn't
+  // clicked its activation link yet, say — with HTTP 200 and
+  // success:"false", so the status code alone would call a lost message
+  // "sent". Read the body; a service that doesn't send JSON is trusted.
+  function readServiceReply(res) {
+    if (!res.ok) throw new Error("Request failed");
+    return res.json().catch(function () { return {}; }).then(function (out) {
+      if (out && String(out.success) === "false") {
+        throw new Error(out.message || "Request refused");
+      }
+      return out;
+    });
   }
 
   /* ── Booking calendar ────────────────────────────────────────── */
@@ -634,8 +652,8 @@
           _captcha: "false"
         })
       })
-        .then(function (res) {
-          if (!res.ok) throw new Error("failed");
+        .then(readServiceReply)
+        .then(function () {
           form.reset();
           status.textContent = "You're on the list. See you at the window.";
           status.className = "form-status is-ok";
@@ -926,8 +944,8 @@
         headers: { "Accept": "application/json", "Content-Type": "application/json" },
         body: JSON.stringify(data)
       })
-        .then(function (res) {
-          if (!res.ok) throw new Error("Request failed");
+        .then(readServiceReply)
+        .then(function () {
           form.reset();
           say("Sent — your request is in Chef Joe's inbox. You'll hear back within one business day.", "ok");
         })
@@ -1362,10 +1380,11 @@
     }
 
     // Closed is a dead end on its own — say when we're back instead.
+    // With no route and nothing posted, "closed" would be a guess.
     var next = nextOpening(today);
     text.textContent = next
       ? "Closed today · back " + next.label + (next.time ? ", " + next.time : "")
-      : "Closed today — see the calendar";
+      : "No stop posted today";
   }
 
   // Walks forward a week looking for the next serving day, checking the
